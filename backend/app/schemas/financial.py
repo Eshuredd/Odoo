@@ -114,6 +114,31 @@ class BillingRequest(Input):
     as_of: date
 
 
+class AgingBucket(Output):
+    invoice_count: int
+    amount_paise: int
+
+
+class MonthlyCollection(Output):
+    month: str
+    amount_paise: int
+
+
+class ReportSummary(Output):
+    as_of: date
+    from_date: date
+    to_date: date
+    active_subscription_count: int
+    paused_subscription_count: int
+    revenue_collected_paise: int
+    outstanding_balance_paise: int
+    overdue_invoice_count: int
+    overdue_amount_paise: int
+    aging_buckets: dict[str, AgingBucket]
+    invoice_count_by_status: dict[str, int]
+    monthly_collections: list[MonthlyCollection]
+
+
 class BillingInvoice(Output):
     subscription_id: int
     subscription_number: str

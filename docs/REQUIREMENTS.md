@@ -1,5 +1,7 @@
 # SubCadence requirements
 
+The final completion sprint implements manual partial/final payments with atomic idempotency, Paid settlement, consistent overdue aging and SQL financial reports. The frontend adds all six configuration workflows, product variants, template quotations, profile/payment self-service, signup/reset, invoice notices and browser printing. Migration 0005 preserves earlier migrations. Dedicated PDF export, gateways/reversals/refunds, background jobs and the full-scale performance benchmark remain deferred. See DEMO_SCRIPT.md for setup, coverage, limitations and verification; these additions supersede historical deferred-payment statements below.
+
 SubCadence is a subscription management and recurring billing system for the Odoo × Make-A-Ton hackathon. Stages 1–4 implement the backend foundation, authentication/RBAC/reset, mail delivery/outbox, admin seeding, customers, catalog/plans, quotations, subscription lifecycle, recurring billing, automatic discounts and immutable invoices. The Stitch Next.js frontend connects subscription and billing/invoice workflows. Payment recording, PDFs/email, and financial reports remain deferred. Supplied briefs are the requirements source; the Stage 4 financial decisions below supersede earlier deferred billing notes.
 
 ## Access and identity

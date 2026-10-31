@@ -24,8 +24,10 @@ def summary(session, as_of: date, from_date: date | None, to_date: date | None):
         revenue=session.scalar(select(func.coalesce(func.sum(Payment.amount_paise),0)).where(Payment.payment_date>=start,Payment.payment_date<=end))
         month=func.strftime("%Y-%m",Payment.payment_date)
         monthly=session.execute(select(month,func.sum(Payment.amount_paise)).where(Payment.payment_date>=start,Payment.payment_date<=end).group_by(month).order_by(month)).all()
-    except OperationalError:
-        raise ServiceError(422,"Report totals exceed the supported SQL integer range") from None
+    except OperationalError as error:
+        if "integer overflow" in str(error.orig).lower():
+            raise ServiceError(422,"Report totals exceed the supported SQL integer range") from None
+        raise ServiceError(503,"Financial report is temporarily unavailable") from None
     active=session.scalar(select(func.count()).select_from(Subscription).where(Subscription.status==SubscriptionStatus.ACTIVE))
     paused=session.scalar(select(func.count()).select_from(Subscription).where(Subscription.status==SubscriptionStatus.ACTIVE,Subscription.is_paused.is_(True)))
     counts=dict(session.execute(select(Invoice.status,func.count()).where(Invoice.sealed.is_(True)).group_by(Invoice.status)).all())

@@ -1,5 +1,26 @@
 # REST API contract
 
+## Final sprint additions
+
+All paths below use `/api/v1`. Authorization and SQL ownership apply before filtering, counting or pagination.
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| POST | `/invoices/{id}/payments` | Admin/staff; 201 new or identical replay; strict positive amount_paise, method, payment_date, required idempotency_key; optional reference/note |
+| GET | `/invoices/{id}/payments` | Standard paginated history; operators or owning customer; foreign invoice returns 404 |
+| GET | `/payments`, `/payments/{id}` | Operators or owning customer; limit/offset, optional invoice_id/from_date/to_date; newest ID first |
+| POST | `/invoices/{id}/settle-zero` | Admin/staff; explicitly settle a Confirmed zero-total invoice without a payment |
+| GET | `/reports/summary` | Admin/staff only; required as_of, optional inclusive from_date/to_date (month start/as_of defaults) |
+| POST | `/invoices/{id}/send` | Admin/staff; confirmed/paid only; registered customer email; accurate offline_outbox or smtp_accepted result |
+
+Payment methods are cash/bank_transfer/upi/card/other. Idempotency keys are 1–128 trimmed characters, globally unique; replay compares the complete normalized payload and invoice ID. Different data returns 409; immutable payments cannot be amended/deleted or reversed. PaymentOut omits the idempotency key and contains id, invoice_id, amount_paise, method, payment_date, reference, note, created_at. Amount must not exceed the current remaining balance and the invoice must be Confirmed. After full payment it becomes Paid; any recorded payment prevents cancellation. A failed audit rolls back the payment and settlement.
+
+InvoiceOut now adds paid_amount_paise, remaining_balance_paise and payment_progress (unpaid/partial/paid). GET invoice detail/list accept optional as_of; is_overdue/days_overdue are null without it, otherwise calculated consistently. Lists accept overdue=true/false only with as_of. Confirmed positive balances are overdue strictly after due_date; Paid/Draft/Cancelled are never overdue. Zero settlement is explicit; no zero-value payment is fabricated.
+
+Summary returns dates, active_subscription_count (including paused), paused_subscription_count, revenue_collected_paise, outstanding_balance_paise, overdue_invoice_count, overdue_amount_paise, aging_buckets (`1_30`, `31_60`, `61_plus`: invoice_count/amount_paise), invoice_count_by_status and monthly_collections (month/amount_paise). SQL aggregates reconcile with persisted records. Collection dates filter payment_date only; balances/statuses are current state, not historical reconstruction. Current balances include all recorded payments. SQL integer overflow returns an explicit 422; database failure returns sanitized 503.
+
+Send writes an invoice notice and audit in the same offline transaction, or requests configured SMTP delivery. SMTP acceptance is not guaranteed delivery and cannot be rolled back after external acceptance. No PDF-generation endpoint exists; frontend Print uses browser print CSS. The final sprint rules supersede earlier Stage 4 statements reserving payment/report features.
+
 Base path: `/api/v1`. Stages 1–4 implement health, authentication, staff creation, development outbox, customer profiles, catalog/plans, quotation templates, subscription lifecycle, recurring billing, discounts, and invoices. Payments and reports remain planned. Swagger UI is at `/docs`; `/openapi.json` is the authoritative machine-readable schema for all exact request/response types/defaults/bounds. Documentation assets are served locally.
 
 ## Implemented health endpoint

@@ -11,6 +11,8 @@ from app.schemas import financial as s
 from app.schemas.commercial import Page
 from app.services import billing, invoices
 from app.services.payments import invoice_output
+from app.models import CustomerProfile, User
+from app.services.mailer import MailMessage, MailDeliveryError, DatabaseOutboxMailer
 from app.services.audit import record_event
 from app.services.catalog import reference
 from app.services.commercial_common import apply_fields, get_record, page, validated_patch, write_scope
@@ -118,3 +120,22 @@ def confirm_invoice(identifier: RecordId, actor: Operator, db: Database, clock: 
 @router.post("/invoices/{identifier}/cancel", response_model=s.InvoiceOut)
 def cancel_invoice(identifier: RecordId, actor: Operator, db: Database, clock: RequestClock):
     return invoices.transition(db, identifier, "cancel", actor, clock)
+
+
+@router.post("/invoices/{identifier}/send")
+def send_invoice(identifier:RecordId,actor:Operator,db:Database,clock:RequestClock,request:Request):
+    try:
+        with write_scope(db,actor,UserRole.ADMIN,UserRole.STAFF):
+            invoice=invoices.get_invoice(db,actor,identifier)
+            if invoice.status not in {InvoiceStatus.CONFIRMED,InvoiceStatus.PAID}:
+                raise ServiceError(409,"Only confirmed or paid invoices can be sent")
+            recipient=db.scalar(select(User.email).join(CustomerProfile,CustomerProfile.user_id==User.id).where(CustomerProfile.id==invoice.customer_id))
+            total=f"INR {invoice.total_paise//100}.{invoice.total_paise%100:02d}"
+            body=f"SubCadence invoice {invoice.number}\nPeriod: [{invoice.period_start}, {invoice.period_end})\nInvoice date: {invoice.invoice_date}\nDue date: {invoice.due_date}\nTotal: {total}\nThis is an invoice notice, not a payment gateway request."
+            request.app.state.mailer.send(MailMessage(recipient_email=recipient,subject=f"SubCadence invoice {invoice.number}",body=body),session=db,now=clock())
+            record_event(db,actor_id=actor.id,action="invoice.send_requested",entity="invoice",entity_id=invoice.id,now=clock())
+            db.flush()
+        offline=isinstance(request.app.state.mailer,DatabaseOutboxMailer)
+        return {"message":"Invoice notice saved to the offline email outbox." if offline else "Invoice notice accepted by SMTP.","delivery":"offline_outbox" if offline else "smtp_accepted"}
+    except MailDeliveryError:
+        raise ServiceError(503,"Invoice notice could not be sent; no success was recorded") from None

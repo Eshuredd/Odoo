@@ -16,11 +16,15 @@ def test_health_and_openapi(client: TestClient) -> None:
     assert client.get("/docs").status_code == 200
     schema = client.get("/openapi.json").json()
     assert schema["info"]["title"] == "SubCadence API"
-    assert set(schema["paths"]) == {
+    baseline_paths = {
         "/api/v1/health", "/api/v1/auth/signup", "/api/v1/auth/login", "/api/v1/auth/me",
         "/api/v1/auth/logout", "/api/v1/auth/password-reset/request",
         "/api/v1/auth/password-reset/confirm", "/api/v1/users/staff", "/api/v1/dev/email-outbox",
     }
+    assert baseline_paths <= set(schema["paths"])
+    assert all(path.startswith("/api/v1/") for path in schema["paths"])
+    assert not any(path.startswith("/api/v1/" + name) for path in schema["paths"]
+                   for name in ("billing", "invoices", "payments", "reports", "discounts"))
 
 
 def test_health_executes_database_query(client: TestClient) -> None:

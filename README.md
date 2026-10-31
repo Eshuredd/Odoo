@@ -2,7 +2,7 @@
 
 A subscription management and recurring billing platform for the Odoo × Make-A-Ton hackathon. The planned workflow connects catalog configuration, quotations, subscription activation, recurring invoices, partial payments, reports, and customer self-service.
 
-**Stages 1–2 are implemented:** backend foundation, database-aware health, authentication, RBAC, password reset, SMTP/offline mail, and explicit admin seeding. Catalog, subscriptions, billing, payments, reporting, and the frontend remain deferred.
+**Stages 1–3 are implemented:** backend foundation, authentication/RBAC/reset, SMTP/offline mail, customer profiles, taxes, products/variants, plans, quotation templates, and subscription lifecycle management. Recurring invoice generation, discounts, payments, reports, and the frontend remain deferred.
 
 ## Architecture and stack
 
@@ -14,16 +14,16 @@ The repository root is the `subcadence/` project root from the brief, even if th
 .
 ├── backend/
 │   ├── app/
-│   │   ├── api/v1/         # Health, auth, staff and development outbox routes
+│   │   ├── api/v1/         # Auth, customers, catalog, templates, subscriptions and health
 │   │   ├── api/dependencies.py # Bearer auth and reusable role dependencies
 │   │   ├── core/           # Settings, validation, principal, clock, JWT/password helpers
 │   │   ├── db/             # Metadata, UTC type, engine and sessions
-│   │   ├── models/         # User, AuditLog, PasswordResetToken and EmailOutbox
-│   │   ├── schemas/        # Safe auth responses, input validation and outbox pagination
-│   │   ├── services/       # Auth/reset, audit writes and mailer implementations
+│   │   ├── models/         # Auth, customer and commercial typed ORM models
+│   │   ├── schemas/        # Auth, customer/catalog/lifecycle inputs, outputs and pagination
+│   │   ├── services/       # Auth, catalog, customer, lifecycle, audit and mailer logic
 │   │   ├── static/swagger-ui/ # Vendored offline API docs assets and licenses
 │   │   └── main.py         # App factory, lifespan, server entry point
-│   ├── alembic/versions/   # Original 0001 foundation and new 0002 authentication
+│   ├── alembic/versions/   # 0001 foundation, 0002 authentication, 0003 commercial
 │   ├── tests/             # Foundation, auth/RBAC, reset concurrency, SMTP/outbox, seed
 │   ├── scripts/seed_admin.py # Explicit, idempotent admin bootstrap
 │   ├── data/              # Ignored local database; tracked .gitkeep only
@@ -126,6 +126,8 @@ Health: [http://127.0.0.1:8000/api/v1/health](http://127.0.0.1:8000/api/v1/healt
 
 ## Models and transaction behavior
 
+Stage 3 adds CustomerProfile, Tax, Product, ProductVariant, Plan, QuotationTemplate, QuotationTemplateLine, Subscription, and SubscriptionLine. Migration `0003_commercial` creates their tables/indexes/constraints, backfills a profile for each existing customer, and preserves authentication tables, credentials, reset tokens, and audits. Migrations 0001 and 0002 are unchanged. Re-run `python -m alembic upgrade head` after pulling the update.
+
 `User` stores an auto-incrementing ID, required case-insensitively unique email (`NOCASE`), Argon2id password hash, checked admin/staff/customer role, active flag defaulting to true, UTC created/updated timestamps, and nonnegative `auth_version` defaulting to zero. API emails are ASCII-only, syntax-validated, trimmed and lowercased. `updated_at` is maintained for ORM updates; future raw SQL writers must maintain it explicitly.
 
 `AuditLog` stores an auto-incrementing ID, nullable actor reference, required action/entity/entity ID, UTC timestamp, and JSON detail. Actor deletion clears its reference while preserving the event. Signup, staff creation, successful reset, logout, and admin seed write credential-free audits in the same transaction. Replace JSON detail values when updating; nested in-place mutations are not tracked.
@@ -186,7 +188,7 @@ Implemented endpoints:
 
 Signup/staff creation reject extra fields, including role. Login returns `access_token`, `token_type=bearer`, `expires_in=7200`, and a safe public user. Protected requests send `Authorization: Bearer <token>`. Current database role, active state, and auth version are checked on every request; missing/invalid auth is 401, insufficient role is 403. Logout/reset increment the auth version, revoking all existing access tokens. No refresh tokens are implemented. Validation errors omit submitted values; password hashes never appear in API responses.
 
-Use offline Swagger at `/docs` to sign up and log in, then paste the returned access token into **Authorize**. To create staff, log in as the seeded admin and POST an email/password to `/users/staff`. Staff/customers receive 403, anonymous callers 401. Future customer-owned records must filter queries by authenticated user ID; no subscription/invoice ownership models exist yet.
+Use offline Swagger at `/docs` to sign up and log in, then paste the returned access token into **Authorize**. To create staff, log in as the seeded admin and POST an email/password to `/users/staff`. Staff/customers receive 403, anonymous callers 401. Stage 3 customer profiles and subscriptions filter ownership in SQL using the authenticated User ID, before totals and pagination. Invoice ownership awaits its future model.
 
 For local reset demonstration:
 
@@ -208,8 +210,27 @@ This hackathon auth implementation is not production-hardened: rate limiting, MF
 
 ## Planned stages and contract
 
-Stage 2 adds authentication/RBAC, password reset, and explicit admin creation. Later stages add catalog/plans, quotations, subscription lifecycle, idempotent recurring billing and discounts, invoices/payments/overdue tracking, reports, and customer-owned business access. Detailed sequencing after Stage 2 is to be supplied. The planned scale is approximately **5,000 subscriptions and 20,000+ invoices**, with paginated lists under **2 seconds**; these business targets have not yet been benchmarked. Future demo/seed data is **synthetic**. No real credentials or personal data belong in the repository.
+Stage 3 adds customer/catalog management, quotation templates, and the subscription lifecycle. Later stages add idempotent recurring billing and discounts, invoices/payments/overdue tracking, reports, and frontend integration. The planned scale is approximately **5,000 subscriptions and 20,000+ invoices**, with paginated lists under **2 seconds**; these targets have not yet been benchmarked. Future demo/seed data is **synthetic**. No real credentials or personal data belong in the repository.
 
 The frontend will use Next.js, TypeScript, and Tailwind, integrating exported Google Stitch designs. It will be implemented later; no frontend files are generated now.
 
 See [requirements](docs/REQUIREMENTS.md), [decisions and unresolved rules](docs/DECISIONS.md), and the [planned API contract](docs/API_CONTRACT.md). Financial rules mandate INR integer paise, basis-point rates, half-up rounding, half-open billing periods, pricing snapshots, no proration, idempotency, no skipped periods, zero-write dry runs, and one transaction per subscription. Pause/expiration semantics and other detailed business rules remain explicitly unresolved.
+
+## Stage 3 commercial workflow
+
+Use `/docs` and the [exact contracts and six example requests](docs/API_CONTRACT.md#stage-3-request-examples) to:
+
+1. As admin, create a tax, product, priced variant, monthly plan, and quotation template.
+2. Sign up a customer (creates a profile atomically), or POST `/api/v1/customers` as admin/staff with validated email/password and profile fields.
+3. As admin/staff, POST `/api/v1/subscriptions` for a Draft, or `/api/v1/subscriptions/from-template` for a copied Quotation.
+4. Follow **draft → quotation → confirmed → active → closed** with the corresponding action endpoints and an explicit `as_of` date. Draft-to-active jumps return 409. Confirmation freezes prices, taxes, plan flags, and terms; activation sets `next_invoice_date` to the original `start_date`, without generating an invoice.
+
+Plan price is a separate recurring base charge; product lines are additional recurring charges. A line's unit price is sales price plus the selected variant's extra price, and amount is quantity × unit price, all using integers. Taxes are exclusive, with rates from 0–10,000 basis points (0–100%); tax amounts and invoice totals are not calculated yet. Money inputs must be JSON integers in SQLite's signed 64-bit range; quantities are 1–1,000,000, with at most 100 lines in a new subscription/template. Overflow is rejected.
+
+Plan validity dates are inclusive availability dates for **new sales**, not subscription end dates. Subscription expiry is independent. New Draft/Quotation selection and confirmation validate current catalog availability/minimum quantity. Confirmation captures the then-current pricing; later plan/product/variant/tax edits never change confirmed snapshots. Plan flags used by close/pause/renew are the accepted, snapshotted flags. `auto_close` is stored for future automation and does nothing automatically yet.
+
+Admin configures the catalog; staff reads it and operates customers/subscriptions. Customers can list/read only their own profiles and subscriptions and update their own company/contact/phone fields. Only admin/staff can edit profile notes or run lifecycle actions. Other customers' record IDs return 404. No catalog hard-delete API exists; deactivate records instead. Template lines can be managed independently, and edits never propagate into earlier copied quotations.
+
+Pause/resume require Active state and preserve the billing anchor/next invoice date. Pausing requires accepted `pausable=true`; closure requires `closable=true`. Renewal is Active-only, requires `renewable=true`, and extends expiry past both its prior value and `as_of`. Closed subscriptions cannot resume or renew. Missed paused periods, mid-period expiry, automatic closure, and billing catch-up policy must be finalized before billing implementation. No proration is introduced.
+
+All lists use `limit` (20 by default, maximum 100) and `offset` (0 by default), deterministic ID ordering, and SQL counts. Subscription filters include customer, plan, product, status, and number search. Authentication retains its separate read session; commercial writes and credential-free audit events share an explicit write transaction.

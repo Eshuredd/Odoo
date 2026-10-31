@@ -104,3 +104,9 @@ def bearer_headers(auth_client: TestClient):
         assert response.status_code == 200
         return {"Authorization": "Bearer " + response.json()["access_token"]}
     return headers
+
+
+@pytest.fixture
+def commerce(auth_client: TestClient, make_user, bearer_headers):
+    from commercial_helpers import Commerce
+    return Commerce(auth_client, bearer_headers(make_user(UserRole.ADMIN)))

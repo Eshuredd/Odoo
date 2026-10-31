@@ -15,7 +15,7 @@ from app.core.security import (
     dummy_password_hash, hash_password, issue_access_token, signing_key, verify_password,
 )
 from app.core.validation import normalize_email, validate_password
-from app.models import PasswordResetToken, User, UserRole
+from app.models import CustomerProfile, PasswordResetToken, User, UserRole
 from app.schemas.auth import LoginResponse, PublicUser
 from app.services.audit import record_event
 from app.services.mailer import MailDeliveryError, Mailer, MailMessage
@@ -35,7 +35,7 @@ def check_principal(session: Session, principal: Principal, role: UserRole | Non
 
 def create_account(
     session: Session, *, email: str, password: str, role: UserRole, clock: Clock,
-    actor: Principal | None = None,
+    actor: Principal | None = None, profile: dict | None = None,
 ) -> PublicUser:
     email = normalize_email(email)
     password_hash = hash_password(password)
@@ -44,7 +44,10 @@ def create_account(
             # Acquire the writer lock before checking an admin's current permissions.
             session.connection(execution_options={"sqlite_begin_mode": "IMMEDIATE"})
             if actor is not None:
-                check_principal(session, actor, UserRole.ADMIN)
+                current = check_principal(session, actor)
+                allowed = {UserRole.ADMIN, UserRole.STAFF} if role == UserRole.CUSTOMER else {UserRole.ADMIN}
+                if current.role not in allowed:
+                    raise ServiceError(403, "Insufficient permissions")
             elif role != UserRole.CUSTOMER:
                 raise ServiceError(403, "Insufficient permissions")
             now = clock()
@@ -52,9 +55,13 @@ def create_account(
                         created_at=now, updated_at=now)
             session.add(user)
             session.flush()  # Database UNIQUE constraint arbitrates concurrent signup too.
+            if role == UserRole.CUSTOMER:
+                fields = {"company_name": "", "contact_name": email.split("@")[0], **(profile or {})}
+                session.add(CustomerProfile(user_id=user.id, created_at=now, updated_at=now, **fields))
             record_event(
                 session, actor_id=actor.id if actor else user.id, entity_id=user.id, now=now,
-                action="user.staff_created" if actor else "user.signup", detail={"role": role.value},
+                action=("user.staff_created" if role == UserRole.STAFF else "user.customer_created") if actor else "user.signup",
+                detail={"role": role.value},
             )
             result = PublicUser.model_validate(user)
     except IntegrityError as error:

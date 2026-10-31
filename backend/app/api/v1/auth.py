@@ -12,6 +12,7 @@ from app.models import UserRole
 from app.schemas.auth import AccountCreate, Credentials, LoginResponse, MessageResponse, PublicUser, ResetConfirm, ResetRequest
 from app.services import auth
 from app.services.mailer import Mailer
+from app.schemas.signup import SignupRequest
 
 router = APIRouter(prefix="/auth", tags=["auth"], dependencies=[Depends(get_auth_settings)])
 Database = Annotated[Session, Depends(get_db)]
@@ -21,9 +22,10 @@ CurrentPrincipal = Annotated[Principal, Depends(get_current_principal)]
 
 
 @router.post("/signup", status_code=201, response_model=PublicUser)
-def signup(body: AccountCreate, db: Database, clock: RequestClock) -> PublicUser:
+def signup(body: SignupRequest, db: Database, clock: RequestClock) -> PublicUser:
     return auth.create_account(db, email=body.email, password=body.password.get_secret_value(),
-                               role=UserRole.CUSTOMER, clock=clock)
+                               role=UserRole.CUSTOMER, clock=clock,
+                               profile=body.model_dump(exclude={"email", "password"}, exclude_none=True))
 
 
 @router.post("/login", response_model=LoginResponse)

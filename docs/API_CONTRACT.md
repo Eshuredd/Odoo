@@ -1,6 +1,6 @@
 # REST API contract
 
-Base path: `/api/v1`. Stages 1–3 implement health, authentication, staff creation, development outbox, customer profiles, catalog/plans, quotation templates, and subscription lifecycle. Billing/invoices/discounts/payments/reports remain planned. Swagger UI is at `/docs`; `/openapi.json` is the authoritative machine-readable schema for all exact request/response types/defaults/bounds. Documentation assets are served locally.
+Base path: `/api/v1`. Stages 1–4 implement health, authentication, staff creation, development outbox, customer profiles, catalog/plans, quotation templates, subscription lifecycle, recurring billing, discounts, and invoices. Payments and reports remain planned. Swagger UI is at `/docs`; `/openapi.json` is the authoritative machine-readable schema for all exact request/response types/defaults/bounds. Documentation assets are served locally.
 
 ## Implemented health endpoint
 
@@ -80,9 +80,34 @@ Commercial endpoints are detailed below. Future resource methods/permissions wil
 - Customer ownership is enforced server-side on every record, relationship, list, report, and export. A guessed ID must not reveal another customer's records. Admin/staff access is separately authorized; being authenticated is insufficient.
 - Idempotent billing and invoice period uniqueness are mandatory. Per-subscription transaction boundaries cover invoice persistence, discount redemption, and next billing date. Dry-run persists nothing. Payment retries and any general idempotency-key convention need a later explicit contract.
 
-Billing/invoice/discount/payment/report resources remain documentation only; there are no placeholder routes for them.
+Billing/invoice/discount routes are implemented in Stage 4 as specified below. Payment/report resources remain documentation only; there are no placeholder routes for them.
 
-## Stage 3 implemented routes
+## Stage 4 implemented financial routes
+
+| Method | Path | Access / request |
+| --- | --- | --- |
+| POST | `/billing/preview` | Admin/staff; required `{"as_of":"2026-10-31"}`; zero persistent writes |
+| POST | `/billing/run` | Admin/staff; same body; one atomic transaction per subscription |
+| GET | `/discounts`, `/discounts/{id}` | Admin/staff; customers denied |
+| POST | `/discounts` | Admin; DiscountCreate |
+| PATCH | `/discounts/{id}` | Admin; partial DiscountCreate fields; times_used is not writable |
+| GET | `/invoices`, `/invoices/{id}` | Admin/staff or owning customer; inaccessible IDs return 404 |
+| POST | `/invoices/{id}/confirm` | Admin/staff; no request body; draft → confirmed |
+| POST | `/invoices/{id}/cancel` | Admin/staff; no request body; draft/confirmed → cancelled |
+
+DiscountCreate: required name, discount_type (`fixed`/`percentage`), scope (`subscription`/`product`), valid_from, valid_to. Fixed requires value_paise and forbids rate_basis_points; percentage requires rate_basis_points in 0–10000 and forbids value_paise. Product scope requires an existing product_id; subscription scope forbids one. Defaults: minimum_purchase_paise=0, minimum_quantity=1, usage_limit=null, active=true. Money, quantities and counters are strict SQLite-range integers. times_used is server-owned. Discount PATCH may explicitly null product_id/value_paise/rate_basis_points/usage_limit when the resulting complete rule is valid; cannot lower a limit below existing usage. Output adds id, times_used, created_at, updated_at. List filters: active, as_of (inclusive validity), search (escaped name substring), limit/offset.
+
+Invoice lists return the standard items/total/limit/offset envelope, newest ID first. Filters: status (`draft`/`confirmed`/`paid`/`cancelled`), customer_id (operators only), subscription_id, due_from/due_to (inclusive calendar dates), search (escaped invoice-number substring). Ownership is applied before filtering/counting. All monetary fields remain JSON integer paise; no paid amount or balance is returned.
+
+InvoiceOut: id, number, subscription_id, customer_id, period_start, period_end, invoice_date, due_date, status, subtotal_paise, discount_total_paise, tax_total_paise, total_paise, nullable applied_discount_id/applied_discount_snapshot, created_at/updated_at, lines. Each line includes id/invoice_id, line_type (`plan`/`product`), nullable product_id/variant_id, description, quantity, unit_price_paise, subtotal_paise, discount_paise, taxable_amount_paise, tax_rate_basis_points, tax_paise, total_paise. Applied discount snapshots preserve the selected rule's original configuration. Lines/header calculations never change, including while draft or after cancellation.
+
+BillingReport: as_of, dry_run, eligible_subscription_count, generated_or_proposed_invoice_count, projected_or_actual_total_paise, skipped_count, failed_count, invoices, existing_invoices, skipped, errors, auto_closed_subscription_ids. `invoices` contains only new proposals/generated records. `existing_invoices` contains previously reserved periods encountered while repairing a stale schedule and is excluded from financial totals. Every period record includes subscription_id/number, customer_id, period start/end, invoice/due dates, all calculated totals, applied discount snapshot, line calculations, nullable invoice_id/number, disposition (`proposed`/`generated`/`existing`), and catch_up (period_end <= as_of). Skipped/errors identify subscription_id/number and a public reason. skipped_count counts skipped subscriptions plus encountered existing periods. eligible_subscription_count includes due-date and expired automatic-closure candidates, including paused candidates subsequently skipped. Closure IDs are projected in preview and committed in execution.
+
+Billing responses use HTTP 200 with per-subscription failures; inspect failed_count/errors instead of treating HTTP 200 as all-success. Request/auth failures use normal 401/403/422. Execution rechecks identity/eligibility under the write lock. Reports are immediate request results, not persisted run-history records. No cadence/customer billing filter is accepted; extra body fields are rejected. A repeated run with no due work returns zero new invoices and zero total. Existing period reservations, including cancelled invoices, prevent recreation.
+
+See DECISIONS.md for the exact period, allocation, tax, usage-limit, no-proration and closure rules. Invoice cancellation retains redemptions and does not restore usage. Paid is reserved for Stage 5 and cannot be set through these endpoints. Payments, balances, refunds, PDFs, invoice email and financial reports remain unavailable.
+
+## Stage 3 commercial route reference
 
 The following paths are relative to `/api/v1`. Every operation requires an active authenticated user. Admin-only writes return 403 to staff/customers; missing/invalid authentication returns 401. Admin/staff may operate customers/subscriptions; customers get SQL-filtered read access to their own records only. Inaccessible IDs return 404. All create operations return 201, ordinary reads/updates/actions return 200, and template-line deletion returns 204.
 
@@ -154,7 +179,7 @@ Action bodies:
 
 Quotation additionally accepts `validity_days` (default 30). Renew additionally requires `new_expiry_date`, later than both prior expiry and as_of. Lifecycle/status values are lowercase: draft → quotation → confirmed → active → closed. Illegal transitions, expired quotations, and forbidden pause/close/renew states return 409; invalid references, quantities, availability, dates, or overflow return 422. Duplicate catalog variant configuration returns 409. Failed operations leave mutations and audit entries rolled back.
 
-Plan availability is checked inclusively on explicit as_of for new sales and confirmation. Quotation expiry is quotation_date + validity_days, inclusive for confirmation. Confirmation uses current selected catalog prices and freezes them. Activation requires start_date <= as_of <= expiry_date and sets next_invoice_date to original start, even for delayed activation. Pause/resume never advance billing dates; no scheduler, invoice generation, paused-period catch-up, or proration exists yet.
+Plan availability is checked inclusively on explicit as_of for new sales and confirmation. Quotation expiry is quotation_date + validity_days, inclusive for confirmation. Confirmation uses current selected catalog prices and freezes them. Activation requires start_date <= as_of <= expiry_date and sets next_invoice_date to original start, even for delayed activation. Pause/resume never advance billing dates; Stage 4 catches up deferred periods through explicit billing runs. No background scheduler or proration exists.
 
 Every list returns the shared items/total/limit/offset envelope, using SQL counts, deterministic ascending IDs, and ownership before filtering/counting. Filters: customers search company/contact; taxes/products/plans/templates search name and active; products tax_id/product_type; variants active; plans as_of availability; templates plan_id; subscriptions customer_id/plan_id/product_id/status/search(number). Searches use escaped literal substrings. Product filtering uses EXISTS so multiple lines do not duplicate subscriptions. limit defaults to 20 (1–100); offset defaults to 0 (nonnegative SQLite-range integer).
 

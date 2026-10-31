@@ -35,9 +35,10 @@ def test_initial_migration_and_metadata_match(database_url: str) -> None:
             "users", "audit_logs", "alembic_version", "password_reset_tokens", "email_outbox",
             "customer_profiles", "taxes", "products", "product_variants", "plans", "quotation_templates",
             "quotation_template_lines", "subscriptions", "subscription_lines",
+            "invoices", "invoice_lines", "discounts", "discount_redemptions",
         }
         with engine.connect() as connection:
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0003_commercial"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0004_financial"
         command.check(config)
         command.upgrade(config, "head")  # Repeated upgrade must be harmless.
         command.downgrade(config, "base")

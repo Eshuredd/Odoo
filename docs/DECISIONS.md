@@ -1,6 +1,20 @@
 # Architecture and business decisions
 
-## Accepted
+## Stage 4 financial rules (supersede earlier deferred billing notes)
+
+- INR amounts are nonnegative integer paise bounded by SQLite's signed 64-bit maximum for each persisted line and invoice. Rates are integer basis points (10,000 = 100%). Intermediate products and report batch sums use Python integers. Overflow rejects the entire subscription transaction; no saturation or floating point is used.
+- Invoice periods are `[start, end)`. Daily/weekly boundaries add 1/7 days from the original start; monthly/yearly boundaries are calculated from the original start's day/month and clamped to the target month's last day. A later month/year recovers the original anchor, including February 29. Dates outside Python's calendar range fail explicitly.
+- A full period is due when its start is <= explicit `as_of` and <= inclusive subscription expiry. No proration: the last full period may extend beyond expiry. Invoice date is period start; due date adds accepted payment terms in calendar days. No wall-clock lookup determines eligibility.
+- Currently paused subscriptions generate nothing and retain their next date. Resume catches up every deferred period; there are no historical pause intervals and pausing never forgives charges. Active accepted `auto_close=true` subscriptions close only after expiry, after all eligible periods commit. This applies independently of manual `closable`. Paused subscriptions never auto-close. With auto_close=false the next scheduled date stays beyond expiry for a possible renewal.
+- Plan base is a separate quantity-one line with zero tax: plans have no tax field. Product line prices, quantities, descriptions and exclusive tax rates come from accepted subscription snapshots, never current catalog prices. Invoice lines and calculated header values are immutable, including draft invoices. Only status may transition; all invoices permanently reserve their unique subscription/period, including cancelled invoices.
+- Discounts use inclusive validity dates evaluated at period start. Minimum purchase uses the whole pre-discount invoice subtotal. Minimum quantity counts all product quantities for subscription scope, or matching product quantities for product scope; plan quantity is excluded. Fixed rules require a value only; percentage rules require a rate only. Product scope requires a product; subscription scope forbids one. Global usage limits are supported; per-customer limits are deferred because Stage 4 has no such field.
+- At most one active eligible discount applies. Compute its exact nominal discount (percentage half-up `(base * bps + 5000) // 10000`, fixed capped at eligible subtotal). Allocate it proportionally using integer floors, then distribute remaining paise by descending fractional remainder, with original line order as tie-breaker (plan first, products by subscription-line ID). Allocations sum exactly and never exceed subtotals. Each exclusive line tax is half-up on that line's discounted taxable amount. Select the greatest actual grand-total saving (including tax reduction), tie-breaking by lowest discount ID. Zero-saving rules consume no usage. Totals are subtotal minus allocations plus line taxes.
+- Invoice numbers are stored generated `INV-%06d` values from SQLite AUTOINCREMENT IDs. Redemption, counter increment, invoice/header/lines, schedule advance and audits share one BEGIN IMMEDIATE transaction per subscription, rechecking identity and eligibility after locking. Failures roll back only that subscription; processing continues in ID order. Period uniqueness is the final duplicate safeguard. Existing reserved periods are reported separately and never redeemed again.
+- Preview uses a single read snapshot and the same period/pricing functions. It simulates global usage in subscription-ID/period order, restores simulated consumption on a failed subscription, and writes no invoices, audits, schedules, counters or redemptions. Actual execution independently rechecks each subscription; concurrent edits can change the outcome relative to an earlier preview.
+- Draft invoices may confirm. Draft/confirmed invoices may cancel. Paid is reserved for Stage 5; paid/cancelled transitions are rejected. Cancellation retains period reservation and historical redemptions and does not restore discount usage. No payment history, customer balance, refunds, PDFs, email or reports are implemented here.
+- Billing reports distinguish proposed/generated invoices, already-reserved periods, skipped subscriptions (including paused or concurrently processed), failures, and projected automatic closures. Counts describe these explicit arrays; report totals sum only new proposals/generated invoices. A repeat run with no due work is a successful zero-invoice run, not a new financial transaction.
+
+## Previously accepted foundation rules
 
 1. **INR only.** No exchange rates or multi-currency accounting.
 2. **Integer paise.** Persist and transport monetary amounts as integers; never use binary floating point for financial calculations.
@@ -17,7 +31,7 @@
 
 ## Foundation implementation
 
-- This Git repository's root (currently named `Odoo`) is the `subcadence/` project root in the requested layout; avoid an unnecessary nested repository. Work on `main` and never push automatically. Follow the user's current instruction to leave changes uncommitted and supply a commit message.
+- This Git repository's root (currently named `Odoo`) is the `subcadence/` project root in the requested layout; avoid an unnecessary nested repository. Work on `main` and never push automatically. The Stage 4 brief requests verified commits at meaningful milestones.
 - Relative SQLite URLs resolve against `backend/`, not the current working directory. Default: `backend/data/subcadence.db`. Create parent directories only when constructing an engine; importing the app neither connects nor migrates.
 - Every new physical connection enables foreign keys and a 5,000 ms busy timeout. File databases must enable WAL or connection establishment fails. Memory databases skip WAL and use a shared StaticPool for local/test use; production development uses a file database.
 - Disable sqlite3 legacy implicit transaction handling. SQLAlchemy emits explicit `BEGIN DEFERRED`; a caller can set `sqlite_begin_mode="IMMEDIATE"` on a connection before its transaction. Do not also configure driver autocommit/isolation options. This follows [SQLAlchemy's SQLite transaction guidance](https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#enabling-non-legacy-sqlite-transactional-modes-with-the-sqlite3-or-aiosqlite-driver).
@@ -31,7 +45,9 @@
 - Settings load the project-root `.env`, with real environment variables taking precedence, following [pydantic-settings configuration](https://docs.pydantic.dev/latest/concepts/pydantic_settings/). CORS accepts explicit HTTP(S) origins only, with credentials; local default is `http://localhost:3000`.
 - Swagger UI v5.34.1 assets, licenses, provenance, and checksums are vendored under `backend/app/static/swagger-ui/`. `/docs` serves them locally with the external schema validator disabled, following [FastAPI's self-hosted documentation guidance](https://fastapi.tiangolo.com/how-to/custom-docs-ui-assets/). No documentation CDN or business frontend is required.
 
-## Unresolved before later implementation
+## Historical questions from before Stage 4
+
+The billing, expiry, pause, discount and invoice questions below are resolved by the Stage 4 rules at the top of this document. Payment corrections and financial reporting remain future work.
 
 - Billing schedule adjustment and charges/missed periods during a pause. Stage 3 implements pause/resume state flags and intentionally leaves billing dates unchanged.
 - Expiration during a billing period, and the interaction with the no-proration rule.

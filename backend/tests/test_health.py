@@ -24,7 +24,10 @@ def test_health_and_openapi(client: TestClient) -> None:
     assert baseline_paths <= set(schema["paths"])
     assert all(path.startswith("/api/v1/") for path in schema["paths"])
     assert not any(path.startswith("/api/v1/" + name) for path in schema["paths"]
-                   for name in ("billing", "invoices", "payments", "reports", "discounts"))
+                   for name in ("payments", "reports"))
+    assert {"/api/v1/billing/preview", "/api/v1/billing/run", "/api/v1/invoices",
+            "/api/v1/invoices/{identifier}/confirm", "/api/v1/invoices/{identifier}/cancel",
+            "/api/v1/discounts", "/api/v1/discounts/{identifier}"} <= set(schema["paths"])
 
 
 def test_health_executes_database_query(client: TestClient) -> None:

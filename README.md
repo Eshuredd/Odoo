@@ -2,7 +2,7 @@
 
 A subscription management and recurring billing platform for the Odoo × Make-A-Ton hackathon. The planned workflow connects catalog configuration, quotations, subscription activation, recurring invoices, partial payments, reports, and customer self-service.
 
-**Stages 1–3 are implemented:** backend foundation, authentication/RBAC/reset, SMTP/offline mail, customer profiles, taxes, products/variants, plans, quotation templates, and subscription lifecycle management. Recurring invoice generation, discounts, payments, reports, and the frontend remain deferred.
+**Stages 1–3 and Stitch frontend integration are implemented:** backend foundation, authentication/RBAC/reset, SMTP/offline mail, customer/catalog/plans, quotation templates, subscription lifecycle, and a local Next.js frontend. Recurring invoice generation, discounts, payments, and reports remain deferred; their frontend layouts show unavailable states.
 
 ## Architecture and stack
 
@@ -204,15 +204,15 @@ With SMTP configured, email uses standard-library SMTP and verified STARTTLS by 
 
 **The offline outbox is sensitive local demonstration data:** it stores usable reset links in full bodies and is designed for synthetic accounts. Only admins can retrieve it, and its route/OpenAPI entry are absent outside development. Authentication/outbox responses use `Cache-Control: no-store`. There is no retention/retry worker. SMTP acceptance cannot be atomically rolled back if a later DB commit fails; no production delivery guarantee is claimed.
 
-The future Next.js client will keep access tokens in memory, use Bearer headers, reauthenticate after expiry/revocation, and invoke server-side logout before clearing local state. No cookie auth or frontend page has been built.
+The Next.js client keeps access tokens in memory, uses Bearer headers, requires sign-in after expiry/revocation, and invokes server-side logout before clearing local state. Refreshing the page also requires sign-in; there is no cookie authentication.
 
 This hackathon auth implementation is not production-hardened: rate limiting, MFA, refresh rotation, uniform request timing, and operational security monitoring remain outside Stage 2.
 
 ## Planned stages and contract
 
-Stage 3 adds customer/catalog management, quotation templates, and the subscription lifecycle. Later stages add idempotent recurring billing and discounts, invoices/payments/overdue tracking, reports, and frontend integration. The planned scale is approximately **5,000 subscriptions and 20,000+ invoices**, with paginated lists under **2 seconds**; these targets have not yet been benchmarked. Future demo/seed data is **synthetic**. No real credentials or personal data belong in the repository.
+Stage 3 implements customer/catalog management, quotation templates, and the subscription lifecycle; the Stitch frontend now connects these operations. Later stages add idempotent recurring billing and discounts, invoices/payments/overdue tracking, and reports. The planned scale is approximately **5,000 subscriptions and 20,000+ invoices**, with paginated lists under **2 seconds**; these targets have not yet been benchmarked. Browser-test seed data is **synthetic**. No real credentials or personal data belong in the repository.
 
-The frontend will use Next.js, TypeScript, and Tailwind, integrating exported Google Stitch designs. It will be implemented later; no frontend files are generated now.
+The frontend uses Next.js App Router, TypeScript, and Tailwind, integrating the exported Google Stitch designs. It supports real login, dashboard counts, subscription lists/details, draft creation, and lifecycle actions. Billing and invoice/payment screens preserve the visual structure but remain explicitly unavailable until their backend APIs exist.
 
 See [requirements](docs/REQUIREMENTS.md), [decisions and unresolved rules](docs/DECISIONS.md), and the [planned API contract](docs/API_CONTRACT.md). Financial rules mandate INR integer paise, basis-point rates, half-up rounding, half-open billing periods, pricing snapshots, no proration, idempotency, no skipped periods, zero-write dry runs, and one transaction per subscription. Pause/expiration semantics and other detailed business rules remain explicitly unresolved.
 
@@ -234,3 +234,17 @@ Admin configures the catalog; staff reads it and operates customers/subscription
 Pause/resume require Active state and preserve the billing anchor/next invoice date. Pausing requires accepted `pausable=true`; closure requires `closable=true`. Renewal is Active-only, requires `renewable=true`, and extends expiry past both its prior value and `as_of`. Closed subscriptions cannot resume or renew. Missed paused periods, mid-period expiry, automatic closure, and billing catch-up policy must be finalized before billing implementation. No proration is introduced.
 
 All lists use `limit` (20 by default, maximum 100) and `offset` (0 by default), deterministic ID ordering, and SQL counts. Subscription filters include customer, plan, product, status, and number search. Authentication retains its separate read session; commercial writes and credential-free audit events share an explicit write transaction.
+
+## Run the Stitch frontend
+
+Keep the backend running using the setup above. In a second terminal, with Node.js 22.13+ (22.x) or a supported newer LTS installed:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and sign in with an existing account. The frontend defaults to `http://127.0.0.1:8000/api/v1`; override `NEXT_PUBLIC_API_BASE_URL` in an ignored `frontend/.env.local` when needed. The default backend CORS setting already permits `http://localhost:3000`. JWTs stay in memory, so refreshing requires signing in again.
+
+From `frontend/`, run `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build`. For actual backend/browser integration tests, run `npx playwright install chromium` then `npm run test:e2e`; these start isolated synthetic fixtures, never the developer database. Full setup, connected endpoints, design decisions, limitations, and screenshot locations are in [frontend/README.md](frontend/README.md).

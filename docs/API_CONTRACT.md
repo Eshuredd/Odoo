@@ -50,7 +50,7 @@ Reset URLs use `PASSWORD_RESET_BASE_URL?token=<random-token>`. The future fronte
 
 With SMTP absent, email content goes to the local database outbox. Admins can retrieve `GET /dev/email-outbox?limit=20&offset=0` in `APP_ENV=development`. Items contain `id`, `recipient_email`, `subject`, `body`, and `created_at`, ordered newest first by timestamp then ID. Full bodies intentionally expose usable reset links to the local demo admin: protect this database and API. The endpoint is absent from routing and OpenAPI in `test`/`production`. Authentication and outbox responses use `Cache-Control: no-store`.
 
-The future Next.js frontend will send Bearer headers and keep tokens in memory, reauthenticate after two hours/revocation, invoke server-side logout, and clear local state. No refresh-token, cookie-session, or frontend implementation is provided.
+The local Next.js frontend sends Bearer headers and keeps tokens in memory, reauthenticates after two hours/revocation, invokes server-side logout, and clears local state. Refreshing or opening a new tab requires sign-in. No refresh-token or cookie-session implementation is provided. See [frontend integration](../frontend/README.md) for connected routes and unavailable finance screens; no backend contract was changed for this integration.
 
 ## Resource roadmap
 

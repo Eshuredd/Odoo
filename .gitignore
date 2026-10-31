@@ -30,3 +30,8 @@ htmlcov/
 *~
 .DS_Store
 Thumbs.db
+.vibe-wise/
+*.tsbuildinfo
+frontend/test-results/
+frontend/playwright-report/
+.rederive/

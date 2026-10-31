@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-background":"#dfe2ee","on-tertiary":"#003824","primary-fixed-dim":"#c3c0ff","secondary-fixed-dim":"#4cd7f6","surface-container":"#1c2028","inverse-surface":"#dfe2ee","tertiary-fixed":"#6ffbbe","surface-bright":"#353942","primary":"#c3c0ff","surface-variant":"#31353e","on-secondary":"#003640","outline-variant":"#464555","on-primary":"#1d00a5","surface-container-highest":"#31353e","on-secondary-container":"#00424e","primary-container":"#4f46e5","error":"#ffb4ab","surface":"#0f131c","on-surface":"#dfe2ee","tertiary":"#4edea3","surface-tint":"#c3c0ff","on-secondary-fixed-variant":"#004e5c","on-tertiary-fixed":"#002113","secondary-fixed":"#acedff","on-secondary-fixed":"#001f26","primary-fixed":"#e2dfff","on-surface-variant":"#c7c4d8","on-error-container":"#ffdad6","background":"#0f131c","surface-container-low":"#181c24","on-tertiary-fixed-variant":"#005236","surface-dim":"#0f131c","on-primary-container":"#dad7ff","on-error":"#690005","error-container":"#93000a","tertiary-fixed-dim":"#4edea3","inverse-on-surface":"#2c3039","secondary-container":"#03b5d3","on-primary-fixed-variant":"#3323cc","inverse-primary":"#4d44e3","tertiary-container":"#006e4b","outline":"#918fa1","on-tertiary-container":"#67f4b7","on-primary-fixed":"#0f0069","surface-container-high":"#262a33","secondary":"#4cd7f6","surface-container-lowest":"#0a0e16"},borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},spacing:{"space-sm":"0.5rem","margin":"2rem","space-md":"1rem","space-xl":"2rem","space-xs":"0.25rem","gutter":"1.5rem","gutter-compact":"0.75rem","space-lg":"1.5rem","margin-mobile":"1rem"},fontFamily:{"body-md":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"metric-lg":["Inter"],"headline-lg":["Plus Jakarta Sans"],"label-tabular":["Inter"],"badge-micro":["Inter"],"body-lg":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"label-md":["Inter"],"metric-xl":["Inter"],"display-hero":["Plus Jakarta Sans"]},fontSize:{"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-sm":["16px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"600"}],"metric-lg":["24px",{"lineHeight":"30px","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-lg":["30px",{"lineHeight":"38px","letterSpacing":"-0.02em","fontWeight":"600"}],"label-tabular":["13px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"500"}],"badge-micro":["10px",{"lineHeight":"12px","letterSpacing":"0.05em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"metric-xl":["32px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"display-hero":["40px",{"lineHeight":"48px","letterSpacing":"-0.025em","fontWeight":"700"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased min-h-screen selection:bg-primary selection:text-on-primary"><aside class="fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="flex flex-col flex-1 overflow-y-auto"><div class="px-space-lg pt-space-lg pb-space-md flex flex-col gap-space-sm"><div class="flex items-center gap-space-sm"><img alt="SubCadence Brand Mark" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1U4IHcKgE9ARPrndhdyOST9zZLdj_lLUQe86XwTjX9tu-DAiBV6FSnUwNGb-ublnUAyFMq2EPFsABte01PdBYI49nbO52xJzMmDXm0oiwXkLm_X7KjDTUt1rfsH_D8d3iYIwaAxPP4mDLi-FqimvQx5LxC2WYk6efcP-dJeXI6H84zA4Ww4hGHlgjH2Cf0udI0b1hHCkhS9V4ALGjTxGAZQVM5nHbRmtFlhsjOthnFlJg"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">SubCadence</span><span class="font-badge-micro text-badge-micro text-secondary tracking-wider uppercase mt-0.5">v2.4 • Odoo Edition</span></div></div><div class="mt-space-sm bg-surface-container-low rounded-xl p-space-xs flex items-center justify-between px-space-sm"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-primary text-base">verified_user</span><div class="flex flex-col"><span class="font-badge-micro text-badge-micro uppercase text-on-surface-variant">Active Context</span><span class="font-label-md text-label-md text-on-surface">Admin (Current)</span></div></div><span class="material-symbols-outlined text-on-surface-variant text-base cursor-pointer hover:text-on-surface">unfold_more</span></div></div><nav class="flex-1 px-space-sm py-space-xs space-y-space-md" data-active-classes="bg-primary-container text-on-primary-container font-semibold rounded-xl shadow-[0_0_14px_-2px_rgba(79,70,229,0.4)]"><div class="space-y-space-xs"><span class="px-space-sm font-badge-micro text-badge-micro uppercase tracking-wider text-outline">Overview</span><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="dashboard" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">dashboard</span><span class="font-body-sm text-body-sm">Dashboard</span></div></a></div><div class="space-y-space-xs"><span class="px-space-sm font-badge-micro text-badge-micro uppercase tracking-wider text-outline">Operations</span><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="customers" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">group</span><span class="font-body-sm text-body-sm">Customers</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="quotations" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">description</span><span class="font-body-sm text-body-sm">Quotations</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">sync</span><span class="font-body-sm text-body-sm">Subscriptions</span></div></a></div><div class="space-y-space-xs"><span class="px-space-sm font-badge-micro text-badge-micro uppercase tracking-wider text-outline">Finance</span><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="billing-center" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">bolt</span><span class="font-body-sm text-body-sm">Billing Center</span></div><span class="bg-tertiary-container text-on-tertiary-container font-badge-micro text-badge-micro px-1.5 py-0.5 rounded-full">Auto</span></a><a aria-current="page" class="flex items-center justify-between px-space-sm py-space-xs transition-colors bg-primary-container text-on-primary-container font-semibold rounded-xl shadow-[0_0_14px_-2px_rgba(79,70,229,0.4)]" data-path="invoices" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">receipt_long</span><span class="font-body-sm text-body-sm">Invoices</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="payments" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">credit_card</span><span class="font-body-sm text-body-sm">Payments</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="reports" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">bar_chart</span><span class="font-body-sm text-body-sm">Reports</span></div></a></div><div class="space-y-space-xs"><span class="px-space-sm font-badge-micro text-badge-micro uppercase tracking-wider text-outline">Configuration</span><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="products" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">inventory_2</span><span class="font-body-sm text-body-sm">Products &amp; Variants</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="plans" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">layers</span><span class="font-body-sm text-body-sm">Plans</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="taxes-discounts" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">percent</span><span class="font-body-sm text-body-sm">Taxes &amp; Discounts</span></div></a><a class="flex items-center justify-between px-space-sm py-space-xs rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">tune</span><span class="font-body-sm text-body-sm">Settings</span></div></a></div></nav></div><div class="p-space-sm bg-surface-container-low m-space-sm rounded-xl space-y-space-xs"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span><span class="font-badge-micro text-badge-micro text-on-surface uppercase">Production • Mumbai AP-South-1</span></div><p class="font-badge-micro text-badge-micro text-on-surface-variant leading-tight">All Billing Automations Active</p><div class="pt-space-xs flex items-center justify-between"><a class="font-badge-micro text-badge-micro text-secondary hover:underline flex items-center gap-1" data-path="docs" href="#"><span class="material-symbols-outlined text-xs">help</span>Help &amp; Docs</a><span class="font-badge-micro text-badge-micro text-outline">Odoo 17 Sync</span></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/80 backdrop-blur-xl z-40 flex items-center justify-between px-space-lg shadow-[0_1px_8px_rgba(0,0,0,0.2)]"><div class="flex items-center gap-space-md"><div class="flex items-center bg-surface-container-low px-space-sm py-space-xs rounded-xl text-on-surface-variant w-80 justify-between cursor-pointer hover:bg-surface-container-high transition-colors"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-outline text-base">search</span><span class="font-body-sm text-body-sm text-outline">Search Subscriptions, Customers...</span></div><div class="flex items-center gap-1"><kbd class="font-badge-micro text-badge-micro bg-surface-container-highest px-1.5 py-0.5 rounded text-on-surface-variant">⌘K</kbd></div></div></div><div class="flex items-center gap-space-md"><button class="bg-surface-container-high text-on-surface hover:bg-surface-bright font-label-md text-label-md px-space-sm py-space-xs rounded-lg flex items-center gap-space-xs transition-colors" type="button"><span class="material-symbols-outlined text-sm">bolt</span>Run Billing</button><button class="bg-primary-container text-on-primary-container hover:bg-inverse-primary font-label-md text-label-md px-space-sm py-space-xs rounded-lg flex items-center gap-space-xs shadow-[0_0_14px_-2px_rgba(79,70,229,0.4)] transition-colors" type="button"><span class="material-symbols-outlined text-sm">add</span>+ New Subscription</button><div class="relative cursor-pointer p-space-xs text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-xl">notifications</span><span class="absolute top-1 right-1 bg-error-container text-on-error-container font-badge-micro text-badge-micro px-1 py-0.2 rounded-full leading-none">3</span></div><div class="flex items-center gap-space-xs pl-space-xs cursor-pointer"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXjCDf4Szw7KvdLjkL-GiLYIcqmTUJXwz7aZnV0ACTCOaxgoPfCU4lKeI2BA49pzGycZIPrJKMXe3NybHA2gZoGe53iI9cDecwtICDpZhvTVK7Xpr4cG27As2R7saswqa5FBFXsnMwbW9CvinxPtmwt7uwJ85qAzNoPU9pTHka7ClcjCJkxu_hJcla8rwHT2vO5-8dCEmp-2mpc6cMHqhEJb2adyxw3sbj2Ikz6t7u"/><div class="hidden xl:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface leading-tight">Devin Vance</span><span class="font-badge-micro text-badge-micro text-on-surface-variant uppercase">RevOps Lead</span></div><span class="material-symbols-outlined text-on-surface-variant text-base">expand_more</span></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="w-full px-space-lg py-space-md max-w-[1680px] mx-auto"><div id="subcadence-content"><div class="flex flex-col w-full space-y-space-md">
+<!-- Top Breadcrumb & Action Toolbar -->
+<div class="flex flex-col gap-space-sm bg-surface-container-low rounded-xl p-space-md shadow-md">
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-tabular text-label-tabular">
+<span class="hover:text-primary cursor-pointer transition-colors">Invoices</span>
+<span class="text-outline">/</span>
+<span class="text-on-surface font-semibold">INV-2024-0942</span>
+<span class="text-outline">·</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">Infosys Enterprise Cloud Solutions</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="bg-surface-container-high px-space-sm py-1 rounded-full text-secondary font-label-tabular text-label-tabular flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span>
+          Due: 15 Oct 2024 (Overdue by 9 Days)
+        </span>
+<div class="relative inline-block text-left" id="kebab-menu-wrapper">
+<button class="p-1.5 rounded-lg bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-bright transition-colors" id="toggle-more-btn" type="button">
+<span class="material-symbols-outlined text-base">more_vert</span>
+</button>
+<div class="hidden absolute right-0 mt-2 w-48 rounded-xl bg-surface-container-high shadow-xl p-1 z-30" id="more-actions-menu">
+<button class="w-full text-left px-space-sm py-2 text-on-surface hover:bg-surface-bright rounded-lg font-body-sm text-body-sm flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-sm text-primary">receipt</span>
+              Issue Credit Note
+            </button>
+<button class="w-full text-left px-space-sm py-2 text-error hover:bg-surface-bright rounded-lg font-body-sm text-body-sm flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-sm text-error">cancel</span>
+              Cancel Invoice
+            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Header Record Detail & Primary CTA Bar -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pt-space-xs">
+<div class="flex flex-col sm:flex-row sm:items-center gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Invoice INV-2024-0942</h1>
+</div>
+<div class="flex items-center gap-space-xs">
+<a class="bg-surface-container-highest hover:bg-surface-bright text-primary font-label-tabular text-label-tabular px-2.5 py-1 rounded-full flex items-center gap-1 transition-colors" href="#">
+<span class="material-symbols-outlined text-xs">link</span>
+            Origin: SUB-000142
+          </a>
+<div class="bg-surface-container-highest px-3 py-1 rounded-full flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span>
+<span class="font-badge-micro text-badge-micro uppercase tracking-wider text-secondary-fixed-dim">Partially Paid (65%)</span>
+<div class="w-16 h-1.5 bg-surface-container-lowest rounded-full overflow-hidden ml-1">
+<div class="bg-secondary h-full rounded-full w-[65%]"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs">
+<button class="bg-primary-container text-on-primary-container hover:bg-inverse-primary font-label-md text-label-md px-space-md py-space-xs rounded-lg flex items-center gap-space-xs shadow-md transition-all" onclick="document.getElementById('record-payment-section').scrollIntoView({behavior: 'smooth'})" type="button">
+<span class="material-symbols-outlined text-base">payments</span>
+          Record Payment
+        </button>
+<button class="bg-surface-container-high text-on-surface hover:bg-surface-bright font-label-md text-label-md px-space-sm py-space-xs rounded-lg flex items-center gap-space-xs transition-colors" id="resend-email-btn" type="button">
+<span class="material-symbols-outlined text-base text-primary">send</span>
+          Resend Email
+        </button>
+<button class="bg-surface-container-high text-on-surface hover:bg-surface-bright font-label-md text-label-md px-space-sm py-space-xs rounded-lg flex items-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-base text-secondary">print</span>
+          Download PDF
+        </button>
+</div>
+</div>
+</div>
+<!-- Notification Banner (Dismissible Toast State) -->
+<div class="hidden bg-tertiary-container text-on-tertiary-container px-space-md py-space-xs rounded-xl flex items-center justify-between shadow-md" id="toast-banner">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-base">check_circle</span>
+<span class="font-body-sm text-body-sm font-semibold">Payment link and invoice copy queued for transmission to finance@infosys.com</span>
+</div>
+<button class="text-on-tertiary-container hover:opacity-80" onclick="document.getElementById('toast-banner').classList.add('hidden')" type="button">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+<!-- Invoice Metadata Overview Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-sm">
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col justify-between shadow-sm">
+<span class="font-badge-micro text-badge-micro uppercase text-outline">Invoice Date</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-headline-sm text-headline-sm text-on-surface">01 Oct 2024</span>
+</div>
+<span class="font-label-tabular text-label-tabular text-on-surface-variant mt-2">Issued 09:30 IST</span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col justify-between shadow-sm">
+<span class="font-badge-micro text-badge-micro uppercase text-outline">Billing Period</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-headline-sm text-headline-sm text-on-surface">01 – 31 Oct 2024</span>
+</div>
+<span class="font-label-tabular text-label-tabular text-secondary mt-2">Enterprise Monthly Cycle</span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col justify-between shadow-sm">
+<span class="font-badge-micro text-badge-micro uppercase text-outline">Payment Terms</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-headline-sm text-headline-sm text-on-surface">Net 15 Days</span>
+</div>
+<span class="font-label-tabular text-label-tabular text-on-surface-variant mt-2">Grace threshold: 3 Days</span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col justify-between shadow-sm">
+<span class="font-badge-micro text-badge-micro uppercase text-outline">Due Date</span>
+<div class="flex items-baseline gap-1 mt-1 text-error">
+<span class="font-headline-sm text-headline-sm">15 Oct 2024</span>
+</div>
+<span class="font-badge-micro text-badge-micro uppercase text-error mt-2 font-bold tracking-wider">9 Days Overdue</span>
+</div>
+<div class="bg-surface-container p-space-md rounded-xl flex flex-col justify-between shadow-sm">
+<span class="font-badge-micro text-badge-micro uppercase text-outline">Tax &amp; Statutory Spec</span>
+<div class="mt-1">
+<p class="font-label-tabular text-label-tabular text-on-surface font-semibold truncate">GSTIN: 29AAACI1234M1Z5</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">POS: Karnataka (29)</p>
+</div>
+<span class="font-label-tabular text-label-tabular text-tertiary mt-2">Reverse Charge: No</span>
+</div>
+</div>
+<!-- Customer Legal Entity & Billing Contact Panel -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-sm flex flex-col lg:flex-row justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined text-2xl">apartment</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Infosys Enterprise Cloud Solutions Ltd.</h2>
+<span class="bg-tertiary-container text-on-tertiary-container font-badge-micro text-badge-micro px-2 py-0.5 rounded-full">KYC Verified</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Plot No. 44, Electronic City, Hosur Road, Bengaluru, Karnataka, 560100, India</p>
+<div class="flex flex-wrap items-center gap-space-md mt-2 text-on-surface-variant font-label-tabular text-label-tabular">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">mail</span> billing-ap@infosys.com</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">phone</span> +91 80 2852 0261</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">account_balance</span> HDFC Virtual Account: SUB-INF-942</span>
+</div>
+</div>
+</div>
+<!-- Quick Ledger Summary Pill Indicator -->
+<div class="flex lg:flex-col justify-end items-end gap-1 flex-shrink-0 bg-surface-container-high/60 p-space-sm rounded-xl">
+<span class="font-badge-micro text-badge-micro uppercase text-outline">Contract Scope</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Enterprise Core SOW-78</span>
+<span class="font-label-tabular text-label-tabular text-secondary">Auto-reconciliation active</span>
+</div>
+</div>
+<!-- Invoice Line Items Ledger Table -->
+<div class="bg-surface-container-low rounded-xl shadow-md overflow-hidden">
+<div class="p-space-md bg-surface-container-high/40 flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-xl">table_chart</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Billable Service Items &amp; Tax Allocations</h3>
+</div>
+<span class="font-label-tabular text-label-tabular text-on-surface-variant">4 Line Items (HSN/SAC Registered)</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container-lowest text-outline font-label-md text-label-md uppercase tracking-wider">
+<tr>
+<th class="py-space-sm px-space-md">Item &amp; Description</th>
+<th class="py-space-sm px-space-sm">HSN/SAC</th>
+<th class="py-space-sm px-space-sm text-center">Qty</th>
+<th class="py-space-sm px-space-md text-right">Unit Rate</th>
+<th class="py-space-sm px-space-sm text-center">Discount</th>
+<th class="py-space-sm px-space-md text-center">GST Rate</th>
+<th class="py-space-sm px-space-md text-right">Net Amount</th>
+</tr>
+</thead>
+<tbody class="text-on-surface">
+<tr class="hover:bg-surface-container-high/30 transition-colors">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">SubCadence Core Platform (Enterprise Monthly)</span>
+<span class="text-on-surface-variant font-label-tabular text-label-tabular">Multi-tenant recurring ledger licensing with high availability cluster</span>
+</div>
+</td>
+<td class="py-space-md px-space-sm font-label-tabular text-label-tabular text-secondary">998313</td>
+<td class="py-space-md px-space-sm text-center font-label-tabular text-label-tabular">1 unit</td>
+<td class="py-space-md px-space-md text-right font-label-tabular text-label-tabular">₹85,000.00</td>
+<td class="py-space-md px-space-sm text-center font-label-tabular text-label-tabular text-outline">-</td>
+<td class="py-space-md px-space-md text-center">
+<span class="bg-surface-container-highest px-2 py-0.5 rounded text-on-surface font-badge-micro text-badge-micro">18% (9% + 9%)</span>
+</td>
+<td class="py-space-md px-space-md text-right font-metric-lg text-metric-lg font-semibold text-on-surface">₹85,000.00</td>
+</tr>
+<tr class="hover:bg-surface-container-high/30 transition-colors">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Automated Dunning &amp; Webhook Gateway</span>
+<span class="text-on-surface-variant font-label-tabular text-label-tabular">Smart retry rules, custom dunning cadences, and real-time Kafka publisher</span>
+</div>
+</td>
+<td class="py-space-md px-space-sm font-label-tabular text-label-tabular text-secondary">998314</td>
+<td class="py-space-md px-space-sm text-center font-label-tabular text-label-tabular">1 unit</td>
+<td class="py-space-md px-space-md text-right font-label-tabular text-label-tabular">₹25,000.00</td>
+<td class="py-space-md px-space-sm text-center font-label-tabular text-label-tabular text-outline">-</td>
+<td class="py-space-md px-space-md text-center">
+<span class="bg-surface-container-highest px-2 py-0.5 rounded text-on-surface font-badge-micro text-badge-micro">18% (9% + 9%)</span>
+</td>
+<td class="py-space-md px-space-md text-right font-metric-lg text-metric-lg font-semibold text-on-surface">₹25,000.00</td>
+</tr>
+<tr class="hover:bg-surface-container-high/30 transition-colors">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Dedicated SSO &amp; Audit Vault</span>
+<span class="text-on-surface-variant font-label-tabular text-label-tabular">SAML 2.0 / Okta integration with immutable SOC2 regulatory ledger logs</span>
+</div>
+</td>
+<td class="py-space-md px-space-sm font-label-tabular text-label-tabular text-secondary">998315</td>
+<td class="py-space-md px-space-sm text-center font-label-tabular text-label-tabular">1 unit</td>
+<td class="py-space-md px-space-md text-right font-label-tabular text-label-tabular">₹15,000.00</td>
+<td class="py-space-md px-space-sm text-center font-label-tabular text-label-tabular text-outline">-</td>
+<td class="py-space-md px-space-md text-center">
+<span class="bg-surface-container-highest px-2 py-0.5 rounded text-on-surface font-badge-micro text-badge-micro">18% (9% + 9%)</span>
+</td>
+<td class="py-space-md px-space-md text-right font-metric-lg text-metric-lg font-semibold text-on-surface">₹15,000.00</td>
+</tr>
+<tr class="hover:bg-surface-container-high/30 transition-colors">
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Additional API Throughput (10M calls)</span>
+<span class="text-on-surface-variant font-label-tabular text-label-tabular">Metered burst bandwidth add-on pack over base tier</span>
+</div>
+</td>
+<td class="py-space-md px-space-sm font-label-tabular text-label-tabular text-secondary">998319</td>
+<td class="py-space-md px-space-sm text-center font-label-tabular text-label-tabular">2 units</td>
+<td class="py-space-md px-space-md text-right font-label-tabular text-label-tabular">₹10,000.00</td>
+<td class="py-space-md px-space-sm text-center font-label-tabular text-label-tabular text-outline">-</td>
+<td class="py-space-md px-space-md text-center">
+<span class="bg-surface-container-highest px-2 py-0.5 rounded text-on-surface font-badge-micro text-badge-micro">18% (9% + 9%)</span>
+</td>
+<td class="py-space-md px-space-md text-right font-metric-lg text-metric-lg font-semibold text-on-surface">₹20,000.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Financial Breakdown & Calculation Ledger Section -->
+<div class="p-space-md bg-surface-container-lowest/60 flex flex-col lg:flex-row justify-between gap-space-lg">
+<div class="flex flex-col justify-end space-y-space-xs max-w-md">
+<div class="bg-surface-container-high p-space-sm rounded-xl">
+<span class="font-badge-micro text-badge-micro uppercase text-outline">Notes &amp; Statutory Declaration</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">We declare that this invoice shows the actual price of the services described and that all particulars are true and correct. Electronic tax invoices are generated per Rule 48(4) of CGST Rules.</p>
+</div>
+</div>
+<div class="w-full lg:w-96 flex flex-col space-y-2 font-label-tabular text-label-tabular">
+<div class="flex justify-between text-on-surface-variant">
+<span>Subtotal (Gross Value):</span>
+<span class="text-on-surface">₹1,45,000.00</span>
+</div>
+<div class="flex justify-between text-tertiary">
+<span>Trade Discount (Agreement -10%):</span>
+<span>-₹14,500.00</span>
+</div>
+<div class="flex justify-between text-on-surface font-semibold pt-1">
+<span>Net Taxable Amount:</span>
+<span>₹1,30,500.00</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>Central GST (CGST 9%):</span>
+<span class="text-on-surface">₹11,745.00</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>State GST (SGST 9%):</span>
+<span class="text-on-surface">₹11,745.00</span>
+</div>
+<div class="flex justify-between text-on-surface font-bold text-headline-sm pt-1">
+<span>Total Invoice Amount:</span>
+<span>₹1,53,990.00</span>
+</div>
+<div class="flex justify-between text-tertiary font-semibold">
+<span>Less: Amount Already Paid:</span>
+<span>-₹1,00,000.00</span>
+</div>
+<!-- Outstanding Balance Callout -->
+<div class="mt-2 p-space-sm bg-error-container/40 rounded-xl flex items-center justify-between text-on-surface">
+<div class="flex flex-col">
+<span class="font-badge-micro text-badge-micro uppercase tracking-wider text-error">Remaining Outstanding</span>
+<span class="font-metric-xl text-metric-xl font-bold text-on-surface">₹53,990.00</span>
+</div>
+<span class="bg-error-container text-on-error-container px-2 py-1 rounded text-badge-micro font-badge-micro uppercase font-bold">Unsettled</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Split Panel: Payments History & Payment Recording Form -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md" id="record-payment-section">
+<!-- Left Column: Existing Payment History Ledger (5 cols) -->
+<div class="lg:col-span-5 bg-surface-container-low rounded-xl p-space-md shadow-md flex flex-col justify-between">
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary text-xl">account_balance_wallet</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Payment History</h3>
+</div>
+<span class="bg-surface-container-highest px-2 py-0.5 rounded text-badge-micro font-badge-micro text-on-surface-variant">1 Record</span>
+</div>
+<!-- Payment Record Card -->
+<div class="bg-surface-container-high rounded-xl p-space-md space-y-space-sm">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-tabular text-label-tabular font-bold text-primary">PAY-2024-8841</span>
+<span class="font-badge-micro text-badge-micro text-on-surface-variant">10 Oct 2024, 14:32 IST</span>
+</div>
+<span class="bg-tertiary-container text-on-tertiary-container px-2 py-0.5 rounded-full font-badge-micro text-badge-micro uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+              Reconciled &amp; Posted
+            </span>
+</div>
+<div class="flex items-baseline justify-between pt-1">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Collected Amount:</span>
+<span class="font-metric-lg text-metric-lg font-bold text-tertiary">₹1,00,000.00</span>
+</div>
+<div class="bg-surface-container-lowest p-space-xs rounded-lg space-y-1 text-on-surface-variant font-label-tabular text-label-tabular">
+<div class="flex justify-between">
+<span>Channel:</span>
+<span class="text-on-surface">Direct NEFT Bank Transfer</span>
+</div>
+<div class="flex justify-between">
+<span>Bank Reference:</span>
+<span class="text-on-surface">N284910294</span>
+</div>
+<div class="flex justify-between">
+<span>Audited By:</span>
+<span class="text-on-surface">Vikram Seth (Treasury)</span>
+</div>
+</div>
+</div>
+<!-- Activity & Dunning Audit Timeline -->
+<div class="space-y-space-sm pt-space-xs">
+<h4 class="font-label-md text-label-md uppercase tracking-wider text-outline">Lifecycle &amp; Dunning Audit Trail</h4>
+<div class="space-y-space-xs font-label-tabular text-label-tabular">
+<div class="flex items-start gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim mt-1.5 flex-shrink-0"></span>
+<div class="flex flex-col">
+<span class="text-on-surface">First automated overdue reminder sent to finance-ap@infosys.com</span>
+<span class="text-outline text-badge-micro">16 Oct 2024, 10:00 AM · Automated Cadence</span>
+</div>
+</div>
+<div class="flex items-start gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary mt-1.5 flex-shrink-0"></span>
+<div class="flex flex-col">
+<span class="text-on-surface">First installment of ₹1,00,000 reconciled via HDFC API</span>
+<span class="text-outline text-badge-micro">10 Oct 2024, 02:32 PM · Webhook Synced</span>
+</div>
+</div>
+<div class="flex items-start gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0"></span>
+<div class="flex flex-col">
+<span class="text-on-surface">Invoice INV-2024-0942 generated from Subscription SUB-000142</span>
+<span class="text-outline text-badge-micro">01 Oct 2024, 09:30 AM · System Created</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-space-md">
+<div class="bg-surface-container-lowest p-space-sm rounded-xl flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-2xl">verified</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Statutory Ledger Match</span>
+<span class="font-badge-micro text-badge-micro text-on-surface-variant">All payments linked to Odoo 17 AP/AR ledgers</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Interactive Payment Recording Form (7 cols) -->
+<div class="lg:col-span-7 bg-surface-container-low rounded-xl p-space-md shadow-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-xl">credit_card</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Record Payment for Outstanding ₹53,990.00</h3>
+</div>
+<span class="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-badge-micro text-badge-micro uppercase tracking-wider">Partial / Full Settle</span>
+</div>
+<form class="space-y-space-md mt-space-sm" id="record-payment-form" onsubmit="event.preventDefault(); handlePaymentSubmit();">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<!-- Payment Date -->
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface-variant" for="pay-date">Payment Date</label>
+<input class="bg-surface-container-highest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded-lg outline-none focus:ring-1 focus:ring-primary" id="pay-date" required="" type="date" value="2024-10-24"/>
+</div>
+<!-- Amount Input -->
+<div class="flex flex-col space-y-1">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-on-surface-variant" for="pay-amount">Amount (₹ INR)</label>
+<button class="text-primary font-badge-micro text-badge-micro hover:underline" onclick="document.getElementById('pay-amount').value = '53990.00'" type="button">Full Balance</button>
+</div>
+<div class="relative">
+<span class="absolute left-3 top-2 font-label-tabular text-label-tabular text-on-surface-variant">₹</span>
+<input class="w-full bg-surface-container-highest text-on-surface font-metric-lg text-metric-lg pl-7 pr-3 py-1.5 rounded-lg outline-none focus:ring-1 focus:ring-primary" id="pay-amount" required="" step="0.01" type="number" value="53990.00"/>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<!-- Payment Method Dropdown -->
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface-variant" for="pay-method">Payment Method</label>
+<select class="bg-surface-container-highest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded-lg outline-none focus:ring-1 focus:ring-primary cursor-pointer" id="pay-method">
+<option selected="" value="neft">NEFT / RTGS Bank Transfer</option>
+<option value="upi">UPI Corporate Gateway</option>
+<option value="card">Credit Card (Razorpay Gateway)</option>
+<option value="cheque">Bank Demand Draft / Cheque</option>
+<option value="cash">Cash / Petty Transfer</option>
+</select>
+</div>
+<!-- Bank Reference / UTR Number -->
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface-variant" for="pay-ref">Bank Reference / UTR Number</label>
+<input class="bg-surface-container-highest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded-lg outline-none focus:ring-1 focus:ring-primary" id="pay-ref" placeholder="e.g. UTR-2024981723" required="" type="text" value="UTR-2024981723"/>
+</div>
+</div>
+<!-- Destination Bank Account -->
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface-variant" for="destination-bank">Destination Settlement Account</label>
+<select class="bg-surface-container-highest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded-lg outline-none focus:ring-1 focus:ring-primary cursor-pointer" id="destination-bank">
+<option selected="" value="hdfc-4892">HDFC Bank Corporate Current A/C (**** 4892) - INR Primary</option>
+<option value="icici-1120">ICICI Escrow Collections A/C (**** 1120) - Auto-Sweep</option>
+<option value="sbi-8840">State Bank of India Treasury (**** 8840)</option>
+</select>
+</div>
+<!-- Internal Audit Notes -->
+<div class="flex flex-col space-y-1">
+<label class="font-label-md text-label-md text-on-surface-variant" for="pay-notes">Internal Ledger Audit Notes</label>
+<textarea class="bg-surface-container-highest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded-lg outline-none focus:ring-1 focus:ring-primary" id="pay-notes" placeholder="Provide context regarding payer verification or wire confirmation..." rows="2">Second installment cleared by Infosys treasury team via wire confirmation email.</textarea>
+</div>
+<!-- Auto-send checkbox -->
+<div class="flex items-center gap-space-sm pt-1">
+<input checked="" class="w-4 h-4 rounded bg-surface-container-highest text-primary-container accent-primary-container cursor-pointer" id="send-receipt" type="checkbox"/>
+<label class="font-body-sm text-body-sm text-on-surface cursor-pointer select-none" for="send-receipt">
+              Generate &amp; transmit digital GST payment receipt to customer automatically
+            </label>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-wrap items-center justify-end gap-space-sm pt-space-sm">
+<button class="bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-on-surface font-label-md text-label-md px-space-md py-space-xs rounded-lg transition-colors" onclick="document.getElementById('record-payment-form').reset()" type="button">
+              Clear Form
+            </button>
+<button class="bg-primary-container text-on-primary-container hover:bg-inverse-primary font-label-md text-label-md px-space-lg py-space-xs rounded-lg flex items-center gap-space-xs shadow-md transition-all" id="submit-payment-btn" type="submit">
+<span class="material-symbols-outlined text-sm">task_alt</span>
+              Post &amp; Reconcile Payment
+            </button>
+</div>
+</form>
+</div>
+<!-- Live Payment Reconciliation Feedback state -->
+<div class="hidden mt-space-md p-space-sm bg-tertiary-container text-on-tertiary-container rounded-xl flex items-center justify-between" id="payment-success-msg">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-lg">check_circle</span>
+<span class="font-body-sm text-body-sm font-semibold">Payment of ₹53,990.00 posted! Invoice INV-2024-0942 is now Fully Paid.</span>
+</div>
+<button class="text-on-tertiary-container" onclick="document.getElementById('payment-success-msg').classList.add('hidden')" type="button">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Kebab menu toggle
+  const kebabBtn = document.getElementById('toggle-more-btn');
+  const moreMenu = document.getElementById('more-actions-menu');
+  if (kebabBtn && moreMenu) {
+    kebabBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      moreMenu.classList.toggle('hidden');
+    });
+    document.addEventListener('click', () => {
+      if (!moreMenu.classList.contains('hidden')) {
+        moreMenu.classList.add('hidden');
+      }
+    });
+  }
+
+  // Resend email trigger feedback
+  const resendBtn = document.getElementById('resend-email-btn');
+  const toastBanner = document.getElementById('toast-banner');
+  if (resendBtn && toastBanner) {
+    resendBtn.addEventListener('click', () => {
+      toastBanner.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  // Payment form submit interaction
+  function handlePaymentSubmit() {
+    const successMsg = document.getElementById('payment-success-msg');
+    const submitBtn = document.getElementById('submit-payment-btn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">refresh</span> Posting...';
+    }
+    setTimeout(() => {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined text-sm">task_alt</span> Post & Reconcile Payment';
+      }
+      if (successMsg) {
+        successMsg.classList.remove('hidden');
+      }
+    }, 700);
+  }
+</script></div></div></main></div></body></html>

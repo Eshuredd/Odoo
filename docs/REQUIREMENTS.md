@@ -1,6 +1,6 @@
 # SubCadence requirements
 
-SubCadence is a subscription management and recurring billing system for the Odoo × Make-A-Ton hackathon. Stages 1–3 implement the backend foundation, migrations, health, authentication/RBAC/reset, mail delivery/outbox, explicit admin seeding, customer profiles, catalog/plans, quotations, and subscription lifecycle. Billing, discounts, invoices, payments, reports, and the frontend remain planned. No official problem statement PDF was present; supplied briefs are the requirements source, including Stage 2's password/performance corrections and Stage 3's commercial rules.
+SubCadence is a subscription management and recurring billing system for the Odoo × Make-A-Ton hackathon. Stages 1–3 implement the backend foundation, migrations, health, authentication/RBAC/reset, mail delivery/outbox, explicit admin seeding, customer profiles, catalog/plans, quotations, and subscription lifecycle. The Stitch integration adds a local Next.js frontend for existing backend capabilities. Billing, discounts, invoices, payments, and reports remain planned, with explicitly unavailable frontend layouts. No official problem statement PDF was present; supplied briefs are the requirements source, including Stage 2's password/performance corrections and Stage 3's commercial rules.
 
 ## Access and identity
 

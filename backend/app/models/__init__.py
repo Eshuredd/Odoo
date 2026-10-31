@@ -10,10 +10,12 @@ from app.models.plan import BillingPeriod, Plan
 from app.models.quotation import QuotationTemplate, QuotationTemplateLine
 from app.models.subscription import Subscription, SubscriptionLine, SubscriptionStatus
 from app.models.financial import Invoice, InvoiceLine, InvoiceStatus, Discount, DiscountType, DiscountScope, DiscountRedemption
+from app.models.payment import Payment, PaymentMethod
 
 __all__ = [
     "AuditLog", "User", "UserRole", "PasswordResetToken", "EmailOutbox", "CustomerProfile",
     "Product", "ProductType", "ProductVariant", "Tax", "BillingPeriod", "Plan",
     "QuotationTemplate", "QuotationTemplateLine", "Subscription", "SubscriptionLine", "SubscriptionStatus",
     "Invoice", "InvoiceLine", "InvoiceStatus", "Discount", "DiscountType", "DiscountScope", "DiscountRedemption",
+    "Payment", "PaymentMethod",
 ]

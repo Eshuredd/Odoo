@@ -3,8 +3,9 @@ from datetime import date, datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import JSON, CheckConstraint, Computed, ForeignKey, Index, String, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import JSON, CheckConstraint, Computed, ForeignKey, Index, String, UniqueConstraint, select, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
+from app.models.payment import Payment
 
 from app.db.base import Base, UTCDateTime, utc_now
 from app.models.commercial_common import Timestamps, boolean, enum_type, integer_check, nonempty
@@ -85,6 +86,18 @@ class Invoice(Timestamps, Base):
     applied_discount_snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSON(none_as_null=True))
     sealed: Mapped[bool] = boolean("invoice_sealed", False)
     lines: Mapped[list["InvoiceLine"]] = relationship(lazy="selectin", cascade="save-update, merge", order_by="InvoiceLine.id")
+    paid_amount_paise: Mapped[int] = column_property(select(func.coalesce(func.sum(Payment.amount_paise), 0))
+        .where(Payment.invoice_id == id).correlate_except(Payment).scalar_subquery())
+
+    @property
+    def remaining_balance_paise(self) -> int:
+        return self.total_paise - self.paid_amount_paise
+
+    @property
+    def payment_progress(self) -> str:
+        if self.status == InvoiceStatus.PAID:
+            return "paid"
+        return "partial" if self.paid_amount_paise else "unpaid"
 
 
 class InvoiceLine(Base):

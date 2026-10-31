@@ -1,5 +1,14 @@
 # Architecture and business decisions
 
+## Final sprint: payments and reporting
+
+- Payments are immutable manual ledger entries, not gateway transfers. Positive integer paise only; confirmed invoices only; no overpayment, reversal or refund. A single BEGIN IMMEDIATE transaction rechecks identity, invoice and the sum of payments, inserts the payment, marks fully paid invoices Paid and audits the mutation. Any recorded payment prevents cancellation. Zero-total Confirmed invoices require explicit `/settle-zero`; no zero-value payment is created.
+- Idempotency keys are globally unique. An identical invoice and complete normalized payment payload returns the original payment, even after final settlement. Reusing a key with different fields returns 409. Keys are client-generated for each form attempt and retained across retries; they are not credentials and are omitted from payment history outputs.
+- Invoice paid amount is a correlated SQL sum over persisted payments, with no redundant stored balance. Payment progress is unpaid/partial/paid; Paid requires explicit zero settlement or exact full payment. Remaining balance is total minus that sum. Overdue is calculated only with explicit as_of: Confirmed, positive balance, due date strictly earlier. Due date itself is not overdue.
+- Summary reports use SQL aggregation. Collections use payment_date in an inclusive from_date/to_date range (default month start through as_of). Balances/counts describe current persisted state using all recorded payments; as_of controls aging, not historical reconstruction of invoice status or balances. Active includes paused Active; paused is also separate. Draft/Cancelled are not collectible. Aging uses outstanding amounts in 1–30, 31–60, 61+ day buckets. Customer endpoints remain ownership filtered; business summaries are operators only.
+- The frontend keeps monetary values as BigInt including request serialization. INR entry accepts plain decimal strings with at most two fractional digits and converts with integers. Chart widths normalize integer amounts solely for presentation. No financial totals are computed from browser downloads.
+- SQLite SQL SUM overflow is rejected explicitly; it never falls back to floating-point totals. A full-scale performance benchmark remains unverified. SMTP acceptance cannot be rolled back if a later database commit fails; offline outbox persistence and its send audit are atomic.
+
 ## Stage 4 financial rules (supersede earlier deferred billing notes)
 
 - INR amounts are nonnegative integer paise bounded by SQLite's signed 64-bit maximum for each persisted line and invoice. Rates are integer basis points (10,000 = 100%). Intermediate products and report batch sums use Python integers. Overflow rejects the entire subscription transaction; no saturation or floating point is used.

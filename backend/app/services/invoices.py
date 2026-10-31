@@ -30,6 +30,8 @@ def transition(session: Session, identifier: int, action: str, actor: Principal,
         allowed = {InvoiceStatus.DRAFT} if action == "confirm" else {InvoiceStatus.DRAFT, InvoiceStatus.CONFIRMED}
         if row.status not in allowed:
             raise ServiceError(409, f"Cannot {action} an invoice in {row.status.value} state")
+        if action == "cancel" and row.paid_amount_paise:
+            raise ServiceError(409, "Cannot cancel an invoice with recorded payments")
         previous = row.status
         row.status = InvoiceStatus.CONFIRMED if action == "confirm" else InvoiceStatus.CANCELLED
         row.updated_at = clock()

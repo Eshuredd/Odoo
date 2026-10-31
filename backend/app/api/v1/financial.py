@@ -10,6 +10,7 @@ from app.models import Discount, Invoice, InvoiceStatus, Product, UserRole
 from app.schemas import financial as s
 from app.schemas.commercial import Page
 from app.services import billing, invoices
+from app.services.payments import invoice_output
 from app.services.audit import record_event
 from app.services.catalog import reference
 from app.services.commercial_common import apply_fields, get_record, page, validated_patch, write_scope
@@ -75,7 +76,7 @@ def patch_discount(identifier: RecordId, body: s.DiscountPatch, actor: Admin, db
 @router.get("/invoices", response_model=Page[s.InvoiceOut])
 def list_invoices(actor: Current, db: Database, paging: Paging, status: InvoiceStatus | None = None,
                   customer_id: FilterId = None, subscription_id: FilterId = None,
-                  due_from: date | None = None, due_to: date | None = None,
+                  due_from: date | None = None, due_to: date | None = None, as_of: date | None = None, overdue: bool | None = None,
                   search: Annotated[str | None, Query(max_length=200)] = None):
     if actor.role == UserRole.CUSTOMER and customer_id is not None:
         raise ServiceError(403, "Customer filters are for operators only")
@@ -91,12 +92,22 @@ def list_invoices(actor: Current, db: Database, paging: Paging, status: InvoiceS
         query = query.where(Invoice.due_date <= due_to)
     if search:
         query = query.where(Invoice.number.contains(search, autoescape=True))
-    return page(db, query, s.InvoiceOut, paging.limit, paging.offset)
+    if overdue is not None:
+        if as_of is None:
+            raise ServiceError(422,"Overdue filtering requires explicit as_of")
+        condition=(Invoice.status==InvoiceStatus.CONFIRMED) & (Invoice.total_paise>Invoice.paid_amount_paise) & (Invoice.due_date<as_of)
+        query=query.where(condition if overdue else ~condition)
+    result=page(db, query, s.InvoiceOut, paging.limit, paging.offset)
+    if as_of is not None:
+        for item in result["items"]:
+            item.is_overdue=item.status==InvoiceStatus.CONFIRMED and item.remaining_balance_paise>0 and item.due_date<as_of
+            item.days_overdue=(as_of-item.due_date).days if item.is_overdue else 0
+    return result
 
 
 @router.get("/invoices/{identifier}", response_model=s.InvoiceOut)
-def get_invoice(identifier: RecordId, actor: Current, db: Database):
-    return s.InvoiceOut.model_validate(invoices.get_invoice(db, actor, identifier))
+def get_invoice(identifier: RecordId, actor: Current, db: Database, as_of: date | None = None):
+    return invoice_output(invoices.get_invoice(db, actor, identifier), as_of)
 
 
 @router.post("/invoices/{identifier}/confirm", response_model=s.InvoiceOut)

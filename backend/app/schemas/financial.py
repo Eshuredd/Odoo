@@ -63,6 +63,7 @@ class DiscountOut(DiscountCreate, Output):
     updated_at: datetime
 
 
+
 class LineOut(Output):
     line_type: str
     product_id: int | None
@@ -102,6 +103,11 @@ class InvoiceOut(Output):
     lines: list[InvoiceLineOut]
     created_at: datetime
     updated_at: datetime
+    paid_amount_paise: int
+    remaining_balance_paise: int
+    payment_progress: str
+    is_overdue: bool | None = None
+    days_overdue: int | None = None
 
 
 class BillingRequest(Input):

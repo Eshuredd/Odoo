@@ -139,3 +139,83 @@ export interface LoginResponse {
   user: User;
 }
 export type Query = Record<string, string | number | boolean | undefined>;
+
+export type InvoiceStatus = "draft" | "confirmed" | "paid" | "cancelled";
+export interface InvoiceLine {
+  id?: number;
+  invoice_id?: number;
+  line_type: "plan" | "product";
+  product_id: number | null;
+  variant_id: number | null;
+  description: string;
+  quantity: number;
+  unit_price_paise: bigint;
+  subtotal_paise: bigint;
+  discount_paise: bigint;
+  taxable_amount_paise: bigint;
+  tax_rate_basis_points: number;
+  tax_paise: bigint;
+  total_paise: bigint;
+}
+export interface DiscountSnapshot {
+  id: number;
+  name: string;
+  discount_type: "fixed" | "percentage";
+  scope: "subscription" | "product";
+  value_paise: bigint | null;
+  rate_basis_points: number | null;
+}
+export interface InvoiceAmounts {
+  subtotal_paise: bigint;
+  discount_total_paise: bigint;
+  tax_total_paise: bigint;
+  total_paise: bigint;
+  applied_discount_id: number | null;
+  applied_discount_snapshot: DiscountSnapshot | null;
+  lines: InvoiceLine[];
+}
+export interface Invoice extends InvoiceAmounts {
+  id: number;
+  number: string;
+  subscription_id: number;
+  customer_id: number;
+  period_start: string;
+  period_end: string;
+  invoice_date: string;
+  due_date: string;
+  status: InvoiceStatus;
+  created_at: string;
+  updated_at: string;
+}
+export interface BillingInvoice extends InvoiceAmounts {
+  subscription_id: number;
+  subscription_number: string;
+  customer_id: number;
+  period_start: string;
+  period_end: string;
+  invoice_date: string;
+  due_date: string;
+  invoice_id: number | null;
+  invoice_number: string | null;
+  disposition: "proposed" | "generated" | "existing";
+  catch_up: boolean;
+}
+export interface BillingIssue {
+  subscription_id: number;
+  subscription_number: string;
+  reason: string;
+}
+export interface BillingReport {
+  as_of: string;
+  dry_run: boolean;
+  eligible_subscription_count: number;
+  generated_or_proposed_invoice_count: number;
+  projected_or_actual_total_paise: bigint;
+  skipped_count: number;
+  failed_count: number;
+  invoices: BillingInvoice[];
+  existing_invoices: BillingInvoice[];
+  skipped: BillingIssue[];
+  errors: BillingIssue[];
+  auto_closed_subscription_ids: number[];
+}

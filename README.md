@@ -2,7 +2,7 @@
 
 A subscription management and recurring billing platform for the Odoo × Make-A-Ton hackathon. The planned workflow connects catalog configuration, quotations, subscription activation, recurring invoices, partial payments, reports, and customer self-service.
 
-**Stages 1–3 and Stitch frontend integration are implemented:** backend foundation, authentication/RBAC/reset, SMTP/offline mail, customer/catalog/plans, quotation templates, subscription lifecycle, and a local Next.js frontend. Recurring invoice generation, discounts, payments, and reports remain deferred; their frontend layouts show unavailable states.
+**Stages 1–4 and Stitch frontend integration are implemented:** backend foundation, authentication/RBAC/reset, SMTP/offline mail, customer/catalog/plans, quotations, subscription lifecycle, recurring billing, automatic discounts, persisted invoices, and the connected local Next.js frontend. Payment recording, PDFs/email, and financial reports remain deferred.
 
 ## Architecture and stack
 
@@ -14,16 +14,16 @@ The repository root is the `subcadence/` project root from the brief, even if th
 .
 ├── backend/
 │   ├── app/
-│   │   ├── api/v1/         # Auth, customers, catalog, templates, subscriptions and health
+│   │   ├── api/v1/         # Auth, catalog, subscriptions, billing, discounts, invoices, health
 │   │   ├── api/dependencies.py # Bearer auth and reusable role dependencies
 │   │   ├── core/           # Settings, validation, principal, clock, JWT/password helpers
 │   │   ├── db/             # Metadata, UTC type, engine and sessions
-│   │   ├── models/         # Auth, customer and commercial typed ORM models
+│   │   ├── models/         # Auth, commercial and immutable financial ORM models
 │   │   ├── schemas/        # Auth, customer/catalog/lifecycle inputs, outputs and pagination
 │   │   ├── services/       # Auth, catalog, customer, lifecycle, audit and mailer logic
 │   │   ├── static/swagger-ui/ # Vendored offline API docs assets and licenses
 │   │   └── main.py         # App factory, lifespan, server entry point
-│   ├── alembic/versions/   # 0001 foundation, 0002 authentication, 0003 commercial
+│   ├── alembic/versions/   # 0001 foundation through 0004 financial
 │   ├── tests/             # Foundation, auth/RBAC, reset concurrency, SMTP/outbox, seed
 │   ├── scripts/seed_admin.py # Explicit, idempotent admin bootstrap
 │   ├── data/              # Ignored local database; tracked .gitkeep only
@@ -143,7 +143,7 @@ with engine.connect().execution_options(sqlite_begin_mode="IMMEDIATE") as connec
         ...
 ```
 
-Session-based services select `sqlite_begin_mode="IMMEDIATE"` on their connection before reading/writing reset state. This serializes concurrent redemption so only one consumer succeeds. Sensitive administrative writes recheck the principal after acquiring the lock. No billing engine is implemented.
+Session-based services select `sqlite_begin_mode="IMMEDIATE"` before sensitive writes. Billing processes each subscription in its own transaction, rechecks the principal and subscription after locking, and commits invoices, discount redemption, schedule changes and audits together. A failed subscription rolls back while the rest continue.
 
 ## Create the first admin
 
@@ -188,7 +188,7 @@ Implemented endpoints:
 
 Signup/staff creation reject extra fields, including role. Login returns `access_token`, `token_type=bearer`, `expires_in=7200`, and a safe public user. Protected requests send `Authorization: Bearer <token>`. Current database role, active state, and auth version are checked on every request; missing/invalid auth is 401, insufficient role is 403. Logout/reset increment the auth version, revoking all existing access tokens. No refresh tokens are implemented. Validation errors omit submitted values; password hashes never appear in API responses.
 
-Use offline Swagger at `/docs` to sign up and log in, then paste the returned access token into **Authorize**. To create staff, log in as the seeded admin and POST an email/password to `/users/staff`. Staff/customers receive 403, anonymous callers 401. Stage 3 customer profiles and subscriptions filter ownership in SQL using the authenticated User ID, before totals and pagination. Invoice ownership awaits its future model.
+Use offline Swagger at `/docs` to sign up and log in, then paste the returned access token into **Authorize**. To create staff, log in as the seeded admin and POST an email/password to `/users/staff`. Staff/customers receive 403, anonymous callers 401. Customer profiles, subscriptions, and invoices filter ownership in SQL using the authenticated User ID, before totals and pagination. Inaccessible record IDs return 404.
 
 For local reset demonstration:
 
@@ -210,11 +210,11 @@ This hackathon auth implementation is not production-hardened: rate limiting, MF
 
 ## Planned stages and contract
 
-Stage 3 implements customer/catalog management, quotation templates, and the subscription lifecycle; the Stitch frontend now connects these operations. Later stages add idempotent recurring billing and discounts, invoices/payments/overdue tracking, and reports. The planned scale is approximately **5,000 subscriptions and 20,000+ invoices**, with paginated lists under **2 seconds**; these targets have not yet been benchmarked. Browser-test seed data is **synthetic**. No real credentials or personal data belong in the repository.
+Stages 3–4 implement customer/catalog management, quotations, subscription lifecycle, idempotent recurring billing, discounts and invoices; the Stitch frontend connects these operations. Later stages add payments, overdue balances and reports. The planned scale is approximately **5,000 subscriptions and 20,000+ invoices**, with paginated lists under **2 seconds**; these targets have not yet been benchmarked. Browser-test seed data is **synthetic**. No real credentials or personal data belong in the repository.
 
-The frontend uses Next.js App Router, TypeScript, and Tailwind, integrating the exported Google Stitch designs. It supports real login, dashboard counts, subscription lists/details, draft creation, and lifecycle actions. Billing and invoice/payment screens preserve the visual structure but remain explicitly unavailable until their backend APIs exist.
+The frontend uses Next.js App Router, TypeScript, and Tailwind, integrating the exported Google Stitch designs. It supports real login, dashboard counts, subscription lists/details, draft creation, lifecycle actions, billing preview/execution, invoice lists/details and confirmation/cancellation. Payment controls remain explicitly unavailable.
 
-See [requirements](docs/REQUIREMENTS.md), [decisions and unresolved rules](docs/DECISIONS.md), and the [planned API contract](docs/API_CONTRACT.md). Financial rules mandate INR integer paise, basis-point rates, half-up rounding, half-open billing periods, pricing snapshots, no proration, idempotency, no skipped periods, zero-write dry runs, and one transaction per subscription. Pause/expiration semantics and other detailed business rules remain explicitly unresolved.
+See [requirements](docs/REQUIREMENTS.md), [financial decisions](docs/DECISIONS.md), and the [API contract](docs/API_CONTRACT.md). Stage 4 defines anchored periods, deferred paused charges, inclusive expiry with full final periods, auto-closure after billing, integer discount allocation, line-level exclusive tax, zero-write previews and atomic idempotent execution. Payment and reporting rules remain future work.
 
 ## Stage 3 commercial workflow
 
@@ -225,7 +225,7 @@ Use `/docs` and the [exact contracts and six example requests](docs/API_CONTRACT
 3. As admin/staff, POST `/api/v1/subscriptions` for a Draft, or `/api/v1/subscriptions/from-template` for a copied Quotation.
 4. Follow **draft → quotation → confirmed → active → closed** with the corresponding action endpoints and an explicit `as_of` date. Draft-to-active jumps return 409. Confirmation freezes prices, taxes, plan flags, and terms; activation sets `next_invoice_date` to the original `start_date`, without generating an invoice.
 
-Plan price is a separate recurring base charge; product lines are additional recurring charges. A line's unit price is sales price plus the selected variant's extra price, and amount is quantity × unit price, all using integers. Taxes are exclusive, with rates from 0–10,000 basis points (0–100%); tax amounts and invoice totals are not calculated yet. Money inputs must be JSON integers in SQLite's signed 64-bit range; quantities are 1–1,000,000, with at most 100 lines in a new subscription/template. Overflow is rejected.
+Plan price is a separate recurring base charge; product lines are additional recurring charges. A line's unit price is sales price plus the selected variant's extra price, and amount is quantity × unit price, all using integers. Taxes are exclusive, with rates from 0–10,000 basis points (0–100%); Stage 4 computes line taxes after discounts when invoicing. Money inputs must be JSON integers in SQLite's signed 64-bit range; quantities are 1–1,000,000, with at most 100 lines in a new subscription/template. Overflow is rejected.
 
 Plan validity dates are inclusive availability dates for **new sales**, not subscription end dates. Subscription expiry is independent. New Draft/Quotation selection and confirmation validate current catalog availability/minimum quantity. Confirmation captures the then-current pricing; later plan/product/variant/tax edits never change confirmed snapshots. Plan flags used by close/pause/renew are the accepted, snapshotted flags. `auto_close` is stored for future automation and does nothing automatically yet.
 
@@ -235,7 +235,51 @@ Pause/resume require Active state and preserve the billing anchor/next invoice d
 
 All lists use `limit` (20 by default, maximum 100) and `offset` (0 by default), deterministic ID ordering, and SQL counts. Subscription filters include customer, plan, product, status, and number search. Authentication retains its separate read session; commercial writes and credential-free audit events share an explicit write transaction.
 
-## Run the Stitch frontend
+## Stage 4 recurring billing demonstration
+
+Migration `0004_financial` adds `discounts`, `invoices`, `invoice_lines`, and `discount_redemptions` with foreign keys, integer/check constraints, useful indexes, generated invoice numbers, permanent period uniqueness/overlap protection, sealed immutable lines/calculations, and atomic usage-counter triggers. Migrations 0001–0003 are unchanged. Apply upgrades explicitly; startup never migrates. No payment table or gateway is added.
+
+From `backend/`, using the existing root virtual environment and configured `.env`:
+
+```powershell
+..\.venv\Scripts\python.exe -m alembic upgrade head
+..\.venv\Scripts\python.exe -m alembic check
+..\.venv\Scripts\subcadence-api.exe
+```
+
+In a second terminal from `frontend/`:
+
+```powershell
+npm ci
+npm run dev
+```
+
+Open http://localhost:3000 and log in as an existing synthetic admin/staff. Create/select a customer, plan and product through the API/docs if needed; create a draft subscription in the UI, quote, confirm and activate it using valid explicit dates. Admins may optionally POST a discount in `/docs`:
+
+```json
+{"name":"Synthetic launch offer","discount_type":"percentage","scope":"subscription","rate_basis_points":1000,"minimum_purchase_paise":0,"minimum_quantity":1,"valid_from":"2026-01-01","valid_to":"2026-12-31","usage_limit":10,"active":true}
+```
+
+Open **Billing Center**, set an `as_of` on/after the subscription start, select **Preview dry run**, inspect periods/tax/discount totals, then **Execute billing → Confirm execution**. Open a generated invoice link (or **Invoices**) and select **Confirm invoice → Confirm now**. Re-preview/re-run the same date: no duplicate invoice or redemption is created. Customers see only their own invoices. Cancel preserves the period and discount usage; payment recording/PDF/email remain disabled.
+
+For an entirely isolated synthetic demonstration and verification (never uses the ordinary database):
+
+```powershell
+# From backend/
+..\.venv\Scripts\python.exe -m pytest -q
+..\.venv\Scripts\python.exe -m compileall -q app alembic scripts tests
+# From frontend/, with ports 3000 and 8766 free
+npm run typecheck
+npm run lint
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+The browser suite migrates a temporary SQLite database and demonstrates the real backend/UI workflow. It shuts down its servers and deletes temporary data. Screenshots stay under ignored `frontend/test-results/screenshots/`. Detailed financial rules and response contracts are in `docs/DECISIONS.md` and `docs/API_CONTRACT.md`; no live/local developer database is changed by automated checks.
+
+## Frontend development commands
 
 Keep the backend running using the setup above. In a second terminal, with Node.js 22.13+ (22.x) or a supported newer LTS installed:
 

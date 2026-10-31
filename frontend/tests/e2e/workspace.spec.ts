@@ -198,13 +198,13 @@ test("customer navigation, ownership isolation, and backend-enforced role restri
   );
 });
 
-test("staff can read operations while financial controls are accurately unavailable", async ({
+test("staff previews and executes real billing, views invoices, confirms and cancels without duplicate periods", async ({
   page,
 }) => {
-  const financialRequests: string[] = [];
+  const paymentRequests: string[] = [];
   page.on("request", (request) => {
-    if (/\/api\/v1\/(billing|invoices|payments)/.test(request.url()))
-      financialRequests.push(request.url());
+    if (/\/api\/v1\/payments/.test(request.url()))
+      paymentRequests.push(request.url());
   });
   await signIn(page, "staff@example.com");
   await page
@@ -214,28 +214,92 @@ test("staff can read operations while financial controls are accurately unavaila
   await expect(
     page.getByRole("button", { name: "Execute billing", exact: true }),
   ).toBeDisabled();
+  await page.getByLabel("Run billing as of date").fill(today);
+  await page.getByRole("button", { name: "Preview dry run" }).click();
+  await expect(page.getByText("Not persisted", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Preview dry run" }),
-  ).toBeDisabled();
+    page.getByText("Synthetic launch discount", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Execute billing", exact: true }),
+  ).toBeEnabled();
   await screenshot(page, "billing-center-desktop");
-  await page.getByRole("link", { name: "Invoices", exact: false }).click();
-  await page.getByRole("link", { name: "Invoice detail workspace" }).click();
+  await page
+    .getByRole("button", { name: "Execute billing", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Confirm execution", exact: true })
+    .click();
+  await expect(page.locator(".notice-success")).toContainText(
+    "1 invoices generated; 0 subscriptions failed",
+  );
   await expect(
-    page.getByRole("heading", { name: "Invoice Detail", exact: true }),
+    page.getByRole("link", { name: "INV-000001", exact: true }),
+  ).toBeVisible();
+  await screenshot(page, "billing-executed-desktop");
+  await page.getByRole("link", { name: "Invoices", exact: false }).click();
+  await expect(
+    page.getByRole("link", { name: "INV-000001", exact: true }),
+  ).toBeVisible();
+  await screenshot(page, "invoice-list-desktop");
+  await page.getByRole("link", { name: "INV-000001", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "INV-000001", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Record Payment", exact: true }).first(),
   ).toBeDisabled();
   await screenshot(page, "invoice-detail-desktop");
-  expect(financialRequests).toEqual([]);
+  await expect(
+    page.getByRole("cell", { name: /Business Software · Brand: Odoo/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("₹1,851.84", { exact: true }).last(),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Confirm invoice", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm now", exact: true }).click();
+  await expect(page.locator(".notice-success")).toContainText("confirmed");
+  await page
+    .getByRole("button", { name: "Cancel invoice", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Cancel now", exact: true }).click();
+  await expect(page.locator(".notice-success")).toContainText("cancelled");
+  expect(paymentRequests).toEqual([]);
   const login = await page.request.post(api + "/auth/login", {
     data: { email: "staff@example.com", password },
   });
+  const headers = {
+    Authorization: `Bearer ${(await login.json()).access_token}`,
+  };
+  const repeated = await page.request.post(api + "/billing/run", {
+    headers,
+    data: { as_of: today },
+  });
+  expect(repeated.status()).toBe(200);
+  expect((await repeated.json()).generated_or_proposed_invoice_count).toBe(0);
+  expect(
+    (await (await page.request.get(api + "/discounts/1", { headers })).json())
+      .times_used,
+  ).toBe(1);
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "Run Billing", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Preview dry run" }).click();
+  await expect(
+    page.getByRole("heading", { name: "No new invoice periods" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Execute billing", exact: true }),
+  ).toBeDisabled();
   expect(
     (
       await page.request.post(api + "/users/staff", {
         headers: {
-          Authorization: `Bearer ${(await login.json()).access_token}`,
+          ...headers,
         },
         data: { email: "denied@example.com", password },
       })
@@ -274,6 +338,110 @@ test("network/server errors, empty state, and revoked sessions are handled", asy
   await expect(page.getByRole("status")).toContainText(
     "expired or been revoked",
   );
+});
+
+test("customers see only owned invoices and cannot run billing or confirm invoices", async ({
+  page,
+}) => {
+  await signIn(page, "buyer@example.com");
+  await page.getByRole("link", { name: "Invoices", exact: true }).click();
+  await page.getByRole("link", { name: "INV-000001", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "INV-000001", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Confirm invoice", exact: true }),
+  ).toHaveCount(0);
+  const login = await page.request.post(api + "/auth/login", {
+    data: { email: "buyer@example.com", password },
+  });
+  const headers = {
+    Authorization: `Bearer ${(await login.json()).access_token}`,
+  };
+  expect(
+    (
+      await page.request.post(api + "/billing/run", {
+        headers,
+        data: { as_of: today },
+      })
+    ).status(),
+  ).toBe(403);
+  expect(
+    (
+      await page.request.post(api + "/invoices/1/confirm", { headers })
+    ).status(),
+  ).toBe(403);
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await signIn(page, "other@example.com");
+  await page.getByRole("link", { name: "Invoices", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "No invoices found" }),
+  ).toBeVisible();
+  const other = await page.request.post(api + "/auth/login", {
+    data: { email: "other@example.com", password },
+  });
+  expect(
+    (
+      await page.request.get(api + "/invoices/1", {
+        headers: {
+          Authorization: `Bearer ${(await other.json()).access_token}`,
+        },
+      })
+    ).status(),
+  ).toBe(404);
+});
+
+test("billing failures never show fictional success and a changed date requires a fresh preview", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "Run Billing", exact: true })
+    .click();
+  await page.route("**/api/v1/billing/preview", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: '{"detail":"Synthetic billing outage"}',
+    }),
+  );
+  await page.getByRole("button", { name: "Preview dry run" }).click();
+  await expect(page.locator(".notice-error")).toContainText(
+    "Synthetic billing outage",
+  );
+  await expect(page.locator(".notice-success")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Execute billing", exact: true }),
+  ).toBeDisabled();
+  await page.unroute("**/api/v1/billing/preview");
+  await page.getByLabel("Run billing as of date").fill(future(32));
+  await page.getByRole("button", { name: "Preview dry run" }).click();
+  await expect(
+    page.getByRole("button", { name: "Execute billing", exact: true }),
+  ).toBeEnabled();
+  await page.route("**/api/v1/billing/run", (route) =>
+    route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: '{"detail":"Synthetic execution outage"}',
+    }),
+  );
+  await page
+    .getByRole("button", { name: "Execute billing", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Confirm execution", exact: true })
+    .click();
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
+    "Synthetic execution outage",
+  );
+  await expect(page.locator(".notice-success")).toHaveCount(0);
+  await page.getByRole("button", { name: "Go back", exact: true }).click();
+  await page.getByLabel("Run billing as of date").fill(future(33));
+  await expect(
+    page.getByRole("button", { name: "Execute billing", exact: true }),
+  ).toBeDisabled();
 });
 
 test("mobile navigation, horizontal table containment, and keyboard dialog cancellation", async ({
@@ -355,9 +523,9 @@ test("mobile navigation, horizontal table containment, and keyboard dialog cance
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Invoices", exact: false })
     .click();
-  await page.getByRole("link", { name: "Invoice detail workspace" }).click();
+  await page.getByRole("link", { name: "INV-000001", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Invoice Detail", exact: true }),
+    page.getByRole("heading", { name: "INV-000001", exact: true }),
   ).toBeVisible();
   expect(
     await page.evaluate(

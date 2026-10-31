@@ -4,15 +4,7 @@ import { use, useCallback, useState } from "react";
 import { Zap as Bolt, LockKeyhole } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { Shell } from "@/components/shell";
-import {
-  Badge,
-  Button,
-  Loading,
-  Notice,
-  Panel,
-  Table,
-  Unavailable,
-} from "@/components/ui";
+import { Badge, Button, Loading, Notice, Panel, Table } from "@/components/ui";
 import { LifecycleDialog } from "@/components/lifecycle-dialog";
 import { chargesBeforeTax, labelsFor } from "@/components/subscription-data";
 import { formatDate, formatINR, formatRate, titleCase } from "@/lib/format";
@@ -129,13 +121,10 @@ function SubscriptionDetail({ id }: { id: number }) {
                 </Button>
               ))}
             {operator && (
-              <Button
-                disabled
-                title="Invoice generation is pending backend support."
-              >
+              <Link href="/billing" className="button button-secondary">
                 <Bolt size={14} />
-                Generate Invoice
-              </Button>
+                Open Billing Center
+              </Link>
             )}
           </div>
         </div>
@@ -329,9 +318,17 @@ function SubscriptionDetail({ id }: { id: number }) {
       </Panel>
       <Panel
         title="Invoice History"
-        subtitle="Issued invoices and recorded payments"
+        subtitle="Persisted billing periods; payments remain unavailable"
       >
-        <Unavailable detail="Invoice and payment APIs are not available yet. No history has been estimated." />
+        <div className="panel-body">
+          <p>
+            Open the invoice register and filter by Subscription ID {row.id} to
+            review this agreement’s invoices.
+          </p>
+          <Link href="/invoices" className="button button-secondary mt-3">
+            View invoice register
+          </Link>
+        </div>
       </Panel>
       {action && (
         <LifecycleDialog

@@ -61,6 +61,8 @@ def main() -> None:
             variant = post(f"/products/{product['id']}/variants", {"attribute":"Brand","value":"Odoo","extra_price_paise":56000})
             plan = post("/plans", {"name":"Monthly Business","price_paise":50000,"billing_period":"monthly","min_quantity":2,
                 "valid_from":"2020-01-01","valid_to":"2099-12-31","pausable":True,"closable":True,"renewable":True})
+            post("/discounts", {"name":"Synthetic launch discount","discount_type":"percentage","scope":"subscription",
+                "rate_basis_points":1000,"valid_from":"2020-01-01","valid_to":"2099-12-31","usage_limit":2})
             for index in range(24):
                 row = post("/subscriptions", {"customer_id":customers[1 if index == 23 else 0]["id"],"plan_id":plan["id"],
                     "start_date":as_of,"expiry_date":(today + timedelta(days=90)).isoformat(),"payment_terms_days":15,"as_of":as_of,

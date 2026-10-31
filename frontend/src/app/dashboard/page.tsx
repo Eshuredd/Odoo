@@ -87,7 +87,7 @@ function Dashboard() {
         <KpiCard
           label="Outstanding balance"
           value="—"
-          detail="Not available · invoices are pending"
+          detail="Not available · payment balances are pending"
           accent="cyan"
         />
         <KpiCard
@@ -200,13 +200,13 @@ function Dashboard() {
           title="Overdue Invoices Requiring Attention"
           subtitle="Outstanding invoice balances"
         >
-          <Unavailable detail="Invoices and overdue calculations are pending. There are no invoice balances to display." />
+          <Unavailable detail="Invoices are available in the register. Payment balances and overdue calculations remain pending." />
         </Panel>
         <Panel
           title="Recent Billing Events"
           subtitle="Invoice generation and payment activity"
         >
-          <Unavailable detail="Billing events and payment history are not available yet." />
+          <Unavailable detail="View generated invoices in the invoice register. A billing audit timeline and payment history are not available yet." />
         </Panel>
       </div>
     </div>

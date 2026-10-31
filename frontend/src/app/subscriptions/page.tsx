@@ -221,10 +221,10 @@ function Subscriptions({
           </p>
         </div>
         <div className="panel p-4">
-          <h3>Billing is pending</h3>
+          <h3>Billing uses full periods</h3>
           <p className="mt-2 text-xs">
-            Next invoice dates are scheduling data. No invoices or payments are
-            generated yet.
+            Billing Center previews and generates due invoices. Pausing defers
+            charges; payments remain unavailable.
           </p>
         </div>
       </div>

@@ -12,6 +12,8 @@ import type {
   SubscriptionCreate,
   User,
   Variant,
+  BillingReport,
+  Invoice,
 } from "./types";
 
 export class ApiError extends Error {
@@ -126,6 +128,31 @@ export class ApiClient {
     for (const [key, value] of Object.entries(query))
       if (value !== undefined && value !== "") params.set(key, String(value));
     return params.size ? `?${params}` : "";
+  }
+  billingPreview(as_of: string) {
+    return this.request<BillingReport>("/billing/preview", {
+      method: "POST",
+      body: { as_of },
+    });
+  }
+  billingRun(as_of: string) {
+    return this.request<BillingReport>("/billing/run", {
+      method: "POST",
+      body: { as_of },
+    });
+  }
+  invoices(query: Query = {}, signal?: AbortSignal) {
+    return this.request<Page<Invoice>>(`/invoices${this.query(query)}`, {
+      signal,
+    });
+  }
+  invoice(id: number, signal?: AbortSignal) {
+    return this.request<Invoice>(`/invoices/${id}`, { signal });
+  }
+  invoiceAction(id: number, action: "confirm" | "cancel") {
+    return this.request<Invoice>(`/invoices/${id}/${action}`, {
+      method: "POST",
+    });
   }
   login(email: string, password: string) {
     return this.request<LoginResponse>("/auth/login", {

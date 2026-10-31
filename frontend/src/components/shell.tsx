@@ -128,9 +128,6 @@ export function Shell({
                 >
                   <item.icon size={18} />
                   <span>{item.label}</span>
-                  {["/billing", "/invoices"].includes(item.href) && (
-                    <span className="nav-pending">Pending</span>
-                  )}
                 </Link>
               ))}
             </div>
@@ -178,14 +175,13 @@ export function Shell({
           <div className="topbar-actions">
             {operator && (
               <>
-                <Button
-                  disabled
-                  title="Billing execution is not available yet."
-                  className="run-billing"
+                <Link
+                  href="/billing"
+                  className="button button-secondary run-billing"
                 >
                   <Bolt size={14} />
                   Run Billing
-                </Button>
+                </Link>
                 <Link
                   className="button button-primary new-subscription"
                   href="/subscriptions/new"

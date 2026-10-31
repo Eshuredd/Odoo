@@ -536,3 +536,201 @@ test("mobile navigation, horizontal table containment, and keyboard dialog cance
   await page.reload();
   await expect(page).toHaveURL(/login/);
 });
+
+test("final business flow: billing, partial and final payment, safe retry and reports", async ({
+  page,
+}) => {
+  const login = await page.request.post(api + "/auth/login", {
+    data: { email: "admin@example.com", password },
+  });
+  const admin = {
+    Authorization: `Bearer ${(await login.json()).access_token}`,
+  };
+  async function post(path: string, data: unknown) {
+    const response = await page.request.post(api + path, {
+      headers: admin,
+      data,
+    });
+    expect(response.ok()).toBe(true);
+    return response.json();
+  }
+  const customer = await post("/customers", {
+    email: "final-buyer@example.com",
+    password,
+    company_name: "Final Sprint Synthetic Co",
+    contact_name: "Synthetic Customer",
+  });
+  const tax = await post("/taxes", {
+    name: "Sprint GST",
+    rate_basis_points: 1800,
+  });
+  const product = await post("/products", {
+    name: "Sprint Support",
+    product_type: "service",
+    sales_price_paise: 10000,
+    tax_id: tax.id,
+  });
+  const plan = await post("/plans", {
+    name: "Sprint Monthly",
+    price_paise: 5000,
+    billing_period: "monthly",
+    valid_from: "2020-01-01",
+    valid_to: "2099-12-31",
+  });
+  const sub = await post("/subscriptions", {
+    customer_id: customer.id,
+    plan_id: plan.id,
+    start_date: future(-1),
+    expiry_date: future(40),
+    as_of: today,
+    payment_terms_days: 0,
+    lines: [{ product_id: product.id, quantity: 1 }],
+  });
+  for (const action of ["quotation", "confirm", "activate"])
+    await post(`/subscriptions/${sub.id}/${action}`, { as_of: today });
+  await signIn(page, "staff@example.com");
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "Run Billing", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Preview dry run" }).click();
+  await expect(page.getByText("Not persisted", { exact: true })).toBeVisible();
+  await page
+    .getByRole("button", { name: "Execute billing", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Confirm execution", exact: true })
+    .click();
+  await expect(page.locator(".notice-success")).toContainText(
+    "1 invoices generated",
+  );
+  const link = page.locator('tbody a[href^="/invoices/"]').first();
+  await expect(link).toBeVisible();
+  const href = (await link.getAttribute("href"))!;
+  await link.click();
+  await page
+    .getByRole("button", { name: "Confirm invoice", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirm now", exact: true }).click();
+  const id = Number(href.split("/").pop());
+  const before = await (
+    await page.request.get(api + `/invoices/${id}`, { headers: admin })
+  ).json();
+  const sent: Record<string, unknown>[] = [];
+  page.on("request", (request) => {
+    if (
+      request.method() === "POST" &&
+      request.url().endsWith(`/invoices/${id}/payments`)
+    )
+      sent.push(request.postDataJSON());
+  });
+  async function payment(amount: string) {
+    await page
+      .getByRole("button", { name: "Record Payment", exact: true })
+      .click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Amount (INR)", { exact: true }).fill(amount);
+    await dialog
+      .getByRole("button", { name: "Save payment", exact: true })
+      .click();
+    await expect(dialog).toHaveCount(0);
+  }
+  const inr = (paise: number) =>
+    `₹${BigInt(paise) / 100n}.${(BigInt(paise) % 100n).toString().padStart(2, "0")}`;
+  const entry = (paise: number) =>
+    `${BigInt(paise) / 100n}.${(BigInt(paise) % 100n).toString().padStart(2, "0")}`;
+  await payment("10.00");
+  await expect(page.getByTestId("remaining-balance")).toHaveText(
+    inr(before.total_paise - 1000),
+  );
+  await expect(
+    page.getByText("partial · 1 days overdue", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Cancel invoice", exact: true }),
+  ).toHaveCount(0);
+  const overdue = await (
+    await page.request.get(api + `/reports/summary?as_of=${future(1)}`, {
+      headers: admin,
+    })
+  ).json();
+  expect(overdue.overdue_invoice_count).toBeGreaterThan(0);
+  await payment(entry(before.total_paise - 1000));
+  await expect(page.getByTestId("remaining-balance")).toHaveText("₹0.00");
+  await expect(page.locator(".status-active").first()).toContainText("Paid");
+  const retry = await page.request.post(api + `/invoices/${id}/payments`, {
+    headers: admin,
+    data: sent[0],
+  });
+  expect(retry.status()).toBe(201);
+  expect(
+    (
+      await (
+        await page.request.get(api + `/invoices/${id}/payments`, {
+          headers: admin,
+        })
+      ).json()
+    ).total,
+  ).toBe(2);
+  const after = await (
+    await page.request.get(api + `/invoices/${id}`, { headers: admin })
+  ).json();
+  expect(after.lines).toEqual(before.lines);
+  expect(after.paid_amount_paise).toBe(before.total_paise);
+  expect(
+    (await post("/billing/run", { as_of: today }))
+      .generated_or_proposed_invoice_count,
+  ).toBe(0);
+  await screenshot(page, "invoice-paid-desktop");
+  await page.getByLabel("Rows per page", { exact: true }).selectOption("20");
+  await expect(page.getByLabel("Rows per page", { exact: true })).toHaveValue(
+    "20",
+  );
+  await page.getByRole("button", { name: "Send Invoice", exact: true }).click();
+  await expect(page.locator(".notice-success")).toContainText(
+    "offline email outbox",
+  );
+  await page.emulateMedia({ media: "print" });
+  expect(
+    await page
+      .locator(".sidebar")
+      .evaluate((element) => getComputedStyle(element).display),
+  ).toBe("none");
+  await page.emulateMedia({ media: "screen" });
+  await page.getByRole("link", { name: "Dashboard", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Collections Over Time" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(inr(before.total_paise), { exact: true }).first(),
+  ).toBeVisible();
+  await screenshot(page, "financial-dashboard-desktop");
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await signIn(page, "final-buyer@example.com");
+  await page.getByRole("link", { name: "Invoices", exact: true }).click();
+  await page.getByRole("link", { name: after.number, exact: true }).click();
+  await expect(page.getByTestId("paid-amount")).toHaveText(
+    inr(before.total_paise),
+  );
+  await expect(
+    page.getByRole("button", { name: "Record Payment", exact: true }),
+  ).toBeDisabled();
+  const otherLogin = await page.request.post(api + "/auth/login", {
+    data: { email: "other@example.com", password },
+  });
+  const other = {
+    Authorization: `Bearer ${(await otherLogin.json()).access_token}`,
+  };
+  expect(
+    (
+      await page.request.get(api + `/invoices/${id}`, { headers: other })
+    ).status(),
+  ).toBe(404);
+  expect(
+    (
+      await page.request.get(api + "/reports/summary?as_of=" + today, {
+        headers: other,
+      })
+    ).status(),
+  ).toBe(403);
+});

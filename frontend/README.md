@@ -2,6 +2,12 @@
 
 A local Next.js App Router, TypeScript, and Tailwind frontend for the existing FastAPI backend. The five exports under `../docs/stitch/` are the visual references; their static pages are not embedded or executed.
 
+The final sprint connects manual partial/final payments, persisted payment history, exact remaining balances, Paid status, overdue filters and SQL financial summaries. Configuration pages cover customers, products/variants, taxes, plans, quotation templates and discounts. Staff can create template quotations; customers can review their own subscriptions/invoices/payments/profile. Signup, forgot/reset password, invoice Send and browser Print are connected. See `../docs/DEMO_SCRIPT.md` for exact demo credentials/setup and screen navigation.
+
+Additional routes: `/configuration/{customers,products,taxes,plans,quotation-templates,discounts}`, `/configuration/products/{id}/variants`, `/subscriptions/from-template`, `/payments`, `/profile`, `/signup`, `/forgot-password`, `/reset-password`. Configuration is operator-only; admin controls catalog writes, while staff manages supported customer/subscription/invoice operations. Account creation is public customer-only. All financial forms serialize BigInt paise losslessly; INR entry permits at most two decimal places and never converts money through JavaScript Number.
+
+Dashboard dates explicitly select collection payment dates and overdue as_of. Balances use all currently persisted payments; these reports do not reconstruct historical invoice statuses. Customer dashboards omit business-wide summaries. In-memory JWTs still require sign-in after refresh. Next dev request URL logging is disabled so reset query tokens are not written to incoming-request logs; the reset form removes the token query from the address bar after reading it.
+
 ## Run locally
 
 Use Node.js 22.13+ on the 22.x line (or supported 24/26 LTS), npm, and the existing Python backend environment. Dependency installation needs internet or cached packages. Application runtime, icons, documentation, and fonts do not depend on third-party hosted assets.
@@ -55,7 +61,7 @@ The public API URL is embedded at build time. This implementation targets local 
 | Route | Behavior |
 | --- | --- |
 | `/login` | JSON login, error feedback, account/role verification through `/auth/me` |
-| `/dashboard` | Real accessible subscription counts and lifecycle distribution; financial widgets unavailable |
+| `/dashboard` | Subscription lifecycle, actual collections, collectible balances, overdue aging and invoices |
 | `/subscriptions` | Server pagination, number search, lifecycle status and plan filters |
 | `/subscriptions/{id}` | Owned/authorized detail, accepted snapshots, explicit-date lifecycle actions |
 | `/subscriptions/new` | Admin/staff draft creation using paginated customer/plan/product/variant selectors |
@@ -63,7 +69,7 @@ The public API URL is embedded at build time. This implementation targets local 
 | `/invoices` | Real persisted register with number/status/customer/subscription/due-date filters and server pagination |
 | `/invoices/{id}` | Immutable line calculations and discount/tax totals; operator confirm/cancel; payment/PDF/email disabled |
 
-Normal use needs customers, taxes, products, variants, and plans configured through the existing backend API/docs. This frontend stage does not add configuration CRUD screens. Customer navigation omits billing and creation controls; direct protected page access is also guarded. Backend authorization remains authoritative.
+Customers, taxes, products/variants, plans, templates and discounts can be configured through the frontend or API/docs. Customer navigation omits administrative configuration and billing controls; direct protected page access is also guarded. Backend authorization remains authoritative.
 
 ## Connected API contract
 
@@ -76,7 +82,7 @@ All paths below are relative to `NEXT_PUBLIC_API_BASE_URL`:
 - POST `/billing/preview` and `/billing/run` with required `{as_of}`; execution follows a confirmation dialog. All cadence/customer scope labels accurately describe all eligible accounts, rather than silently ignoring filters.
 - GET `/invoices` and `/invoices/{id}`, POST `/invoices/{id}/confirm` and `/cancel` (no body). Execution reloads generated invoice details from the database before completing refresh. Financial totals come from persisted backend calculations.
 
-Payment, reporting and audit-history endpoints are not invented. Lifecycle progress displays current state, not a fabricated event timeline. Frozen product/plan labels come from accepted snapshots. When an unconfirmed customer's role cannot access catalog configuration, IDs identify unsnapshotted products/plans rather than fabricating names. Discount configuration uses the admin API/docs; this stage adds no discount CRUD screen.
+Payment and reporting endpoints are implemented in the final sprint: POST/GET `/invoices/{id}/payments`, GET `/payments` and `/payments/{id}`, POST `/invoices/{id}/settle-zero`, GET `/reports/summary`, POST `/invoices/{id}/send`. Full audit-history endpoints are not invented. Lifecycle progress displays current state. Frozen commercial labels come from accepted snapshots. Discount configuration is available to admins in the UI and API/docs.
 
 JWTs live only in the in-memory API client; user state lives in React context. Client-side Next.js navigation preserves the session. Refreshing, opening a new tab, expiry, or a protected 401 requires sign-in again. No tokens go into localStorage, sessionStorage, cookies, URLs, or logs. Logout claims revocation only after the backend succeeds and invalidates all account sessions. Network failure keeps the session visible so logout can be retried.
 
@@ -95,6 +101,8 @@ The app preserves the exported slate/cobalt palette, Plus Jakarta Sans/Inter hie
 Changes from the prototype are deliberate: an inline local SVG fixes the broken brand; bundled font files and Lucide icons replace hosted fonts/images; user initials replace a fictional avatar; navigation includes implemented screens only; unsupported Odoo/gateway/cloud/scheduler claims and invented financial values are removed. Login and create-draft pages extend the same design system. Mobile uses an off-canvas navigation, wrapping forms/actions, and horizontally contained tables. Native dialogs trap focus, support Escape, and restore the invoking button's focus. Motion respects reduced-motion settings.
 
 ## Verification
+
+Final sprint results (2026-10-31): TypeScript, lint and production build passed; 20 unit tests and all 11 real-backend browser tests passed. The backend regression suite passed all 312 tests. Browser scenarios include the full payment-to-Paid workflow, overdue refresh after partial payment, idempotent retry, configuration/variants/templates, account recovery/profile editing, offline invoice notice and print styling. No normal developer database was modified by automated checks.
 
 From `frontend/`:
 
@@ -116,4 +124,4 @@ The production dependency audit is clean. The full development-tool audit curren
 
 ## Remaining scope
 
-Invoice PDFs/email, payment recording, reporting, configuration screens, signup/reset UI, persisted billing-run history, and persistent/refresh-token sessions remain future work. No paid amounts or balances are estimated. Billing is an explicit operator request, not a background scheduler. The existing Stitch theme/layout is preserved.
+Dedicated PDF export, persisted billing-run history, reversals/refunds, payment gateways, historical-balance reconstruction and persistent/refresh-token sessions remain future work. Browser Print supports Save as PDF where available. Invoice notices use configured SMTP or the offline outbox; real provider delivery is unverified. The full-scale performance target remains unbenchmarked. Billing is an explicit operator request, not a background scheduler. The Stitch theme/layout is preserved.

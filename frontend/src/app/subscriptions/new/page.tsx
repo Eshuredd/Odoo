@@ -130,6 +130,14 @@ function NewSubscription() {
       </div>
       <PageHeader
         title="Create Subscription"
+        actions={
+          <Link
+            className="button button-secondary"
+            href="/subscriptions/from-template"
+          >
+            Use quotation template
+          </Link>
+        }
         description="Start a draft agreement using an existing customer, plan, and product catalog. Prices are accepted and frozen later, at confirmation."
       />
       <form onSubmit={submit} className="stack">

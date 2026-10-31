@@ -101,7 +101,8 @@ export default function Login() {
             </Button>
           </form>
           <p className="login-help">
-            Need an account or a password reset? Contact your administrator.
+            <Link href="/signup">Create a customer account</Link> ·{" "}
+            <Link href="/forgot-password">Forgot password?</Link>
           </p>
           <div className="login-security">
             <ShieldCheck size={14} />

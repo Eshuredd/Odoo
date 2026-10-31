@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   X,
   RefreshCw,
+  Layers as LayersIcon,
 } from "lucide-react";
 import { useAuth } from "./auth-provider";
 import { Brand } from "./brand";
@@ -72,8 +73,44 @@ export function Shell({
           ? [{ href: "/billing", label: "Billing Center", icon: Bolt }]
           : []),
         { href: "/invoices", label: "Invoices", icon: FileText },
+        { href: "/payments", label: "Payments", icon: FileText },
       ],
     },
+    {
+      title: "Account",
+      items: [{ href: "/profile", label: "My Profile", icon: ShieldCheck }],
+    },
+    ...(operator
+      ? [
+          {
+            title: "Configuration",
+            items: [
+              {
+                href: "/configuration/customers",
+                label: "Customers",
+                icon: ShieldCheck,
+              },
+              {
+                href: "/configuration/products",
+                label: "Products",
+                icon: LayersIcon,
+              },
+              { href: "/configuration/taxes", label: "Taxes", icon: FileText },
+              { href: "/configuration/plans", label: "Plans", icon: RefreshCw },
+              {
+                href: "/configuration/quotation-templates",
+                label: "Quotation Templates",
+                icon: FileText,
+              },
+              {
+                href: "/configuration/discounts",
+                label: "Discounts",
+                icon: FileText,
+              },
+            ],
+          },
+        ]
+      : []),
   ];
   return (
     <div className="app-shell">

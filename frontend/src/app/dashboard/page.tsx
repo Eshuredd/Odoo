@@ -7,12 +7,10 @@ import { useAuth } from "@/components/auth-provider";
 import {
   Button,
   Empty,
-  KpiCard,
   Loading,
   Notice,
   PageHeader,
   Panel,
-  Unavailable,
 } from "@/components/ui";
 import {
   SubscriptionTable,
@@ -20,6 +18,7 @@ import {
   useSubscriptions,
 } from "@/components/subscription-data";
 import { isOperator, statuses } from "@/lib/lifecycle";
+import { FinancialDashboard } from "@/components/financial-dashboard";
 import { titleCase } from "@/lib/format";
 
 export default function DashboardPage() {
@@ -39,7 +38,7 @@ function Dashboard() {
       <PageHeader
         eyebrow="MISSION CONTROL · SUBSCRIPTION OPERATIONS"
         title="Executive Revenue & Billing Dashboard"
-        description="A clear view of your subscriptions and commercial lifecycle. Financial reporting will appear when billing is available."
+        description="Live subscriptions, recorded collections, unpaid balances and overdue invoices."
         actions={
           <>
             {user && isOperator(user.role) && (
@@ -66,49 +65,8 @@ function Dashboard() {
           <Button onClick={counts.reload}>Retry counts</Button>
         </Notice>
       )}
-      <div className="kpi-grid">
-        <KpiCard
-          label="Active subscriptions"
-          value={counts.data?.active ?? "—"}
-          detail={
-            counts.loading
-              ? "Loading subscription counts…"
-              : counts.error
-                ? "Count unavailable"
-                : `${counts.data?.total ?? 0} subscriptions across all lifecycle states`
-          }
-        />
-        <KpiCard
-          label="Revenue collected"
-          value="—"
-          detail="Not available · payments are pending"
-          accent="green"
-        />
-        <KpiCard
-          label="Outstanding balance"
-          value="—"
-          detail="Not available · payment balances are pending"
-          accent="cyan"
-        />
-        <KpiCard
-          label="Overdue invoices"
-          value="—"
-          detail="Not available · overdue tracking is pending"
-          accent="rose"
-        />
-      </div>
+      {user && isOperator(user.role) && <FinancialDashboard />}
       <div className="two-columns">
-        <Panel
-          title="Revenue Realization vs Expected MRR"
-          subtitle="Collections and recurring revenue reporting"
-        >
-          <div className="chart-pending">
-            <Unavailable
-              title="Revenue reporting is not available yet"
-              detail="No revenue, collection, or target amounts are estimated. Financial data will appear here once reporting is supported."
-            />
-          </div>
-        </Panel>
         <Panel
           title="Lifecycle Distribution"
           subtitle="Current counts from your accessible subscriptions"
@@ -195,20 +153,6 @@ function Dashboard() {
           />
         )}
       </Panel>
-      <div className="two-columns equal-columns">
-        <Panel
-          title="Overdue Invoices Requiring Attention"
-          subtitle="Outstanding invoice balances"
-        >
-          <Unavailable detail="Invoices are available in the register. Payment balances and overdue calculations remain pending." />
-        </Panel>
-        <Panel
-          title="Recent Billing Events"
-          subtitle="Invoice generation and payment activity"
-        >
-          <Unavailable detail="View generated invoices in the invoice register. A billing audit timeline and payment history are not available yet." />
-        </Panel>
-      </div>
     </div>
   );
 }

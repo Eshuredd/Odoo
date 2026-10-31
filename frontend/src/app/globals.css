@@ -278,6 +278,64 @@ p {
 }
 .sidebar nav {
   overflow: auto;
+  min-height: 0;
+}
+.sidebar-top,
+.role-context,
+.sidebar-footer {
+  flex-shrink: 0;
+}
+@media print {
+  .sidebar,
+  .topbar,
+  .workspace-footer,
+  .breadcrumb,
+  .header-actions,
+  .skip-link,
+  dialog,
+  .notice {
+    display: none !important;
+  }
+  .workspace {
+    margin: 0 !important;
+  }
+  .main-content {
+    padding: 0 !important;
+  }
+  body,
+  .panel,
+  .pending-cell,
+  .financial-summary,
+  table,
+  th,
+  td {
+    background: white !important;
+    color: black !important;
+  }
+  .panel {
+    border: 1px solid #999;
+    break-inside: avoid;
+  }
+  .table-scroll {
+    overflow: visible !important;
+  }
+  table {
+    min-width: 0 !important;
+    font-size: 9px;
+  }
+  th,
+  td {
+    min-width: 0;
+    padding: 5px !important;
+    white-space: normal;
+  }
+  .status {
+    color: black !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
 }
 .nav-group {
   margin-bottom: 26px;

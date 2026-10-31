@@ -2,7 +2,25 @@
 
 A subscription management and recurring billing platform for the Odoo × Make-A-Ton hackathon. The planned workflow connects catalog configuration, quotations, subscription activation, recurring invoices, partial payments, reports, and customer self-service.
 
-**Stages 1–4 and Stitch frontend integration are implemented:** backend foundation, authentication/RBAC/reset, SMTP/offline mail, customer/catalog/plans, quotations, subscription lifecycle, recurring billing, automatic discounts, persisted invoices, and the connected local Next.js frontend. Payment recording, PDFs/email, and financial reports remain deferred.
+**The final hackathon workflow is implemented:** customer/catalog/plan/template/discount configuration, quotations and subscription lifecycle, recurring billing, immutable tax/discount invoices, partial/final manual payments, overdue aging, financial reporting, customer self-service, signup/reset, invoice notices and browser printing. The Next.js frontend calls the real FastAPI/SQLite backend throughout.
+
+Start with [the exact demo setup and 2–3 minute script](docs/DEMO_SCRIPT.md). `python -m scripts.seed_demo` creates a small separate synthetic database, uses explicitly supplied credentials, refuses existing ordinary data, and preserves accounts on repeat runs. It does not seed automatically.
+
+Verified on 2026-10-31: **312 backend tests, 20 frontend unit tests, and 11 real-backend Playwright tests passed**. TypeScript, ESLint, production build, Python syntax checks, migration upgrade/check and two CLI demo-seed runs passed. All automated databases were temporary. The browser flow covered partial payment on an overdue invoice, final Paid settlement, safe retry, actual dashboard collections, ownership, configuration/templates, reset/profile, invoice outbox sending and print CSS.
+
+| Supplied hackathon workflow | Status |
+| --- | --- |
+| Admin products/variants/taxes/plans/templates/discounts | Implemented list/create/edit UI and API |
+| Staff customers, template quotations, subscription transitions | Implemented with server-enforced roles |
+| Recurring preview/execution, catch-up, tax and discount invoices | Implemented, idempotent and transactional |
+| Invoice confirmation, partial/full manual payments, Paid status | Implemented with exact balances and retry keys |
+| Collections, outstanding, overdue and aging dashboard | Implemented from SQL aggregates |
+| Customer subscriptions/invoices/payments/profile | Implemented with SQL ownership filters |
+| Signup/reset, invoice notices, print | Implemented; offline outbox or configured SMTP; browser print |
+| Dedicated PDF export, gateways, reversals/refunds, cloud/Odoo sync | Not implemented |
+| Full-scale performance target | Unverified; benchmark deferred |
+
+Migration `0005` adds immutable payments and guarded settlement/cancellation transitions, preserving migrations 0001–0004. Balances are calculated from persisted payments, not stored redundantly. Payment insert, Paid transition and audit share a BEGIN IMMEDIATE transaction; same-key identical retries return the original payment and conflicting retries return 409. Reports exclude Draft/Cancelled from collectible balances and use explicit as_of for overdue aging.
 
 ## Architecture and stack
 
@@ -210,11 +228,11 @@ This hackathon auth implementation is not production-hardened: rate limiting, MF
 
 ## Planned stages and contract
 
-Stages 3–4 implement customer/catalog management, quotations, subscription lifecycle, idempotent recurring billing, discounts and invoices; the Stitch frontend connects these operations. Later stages add payments, overdue balances and reports. The planned scale is approximately **5,000 subscriptions and 20,000+ invoices**, with paginated lists under **2 seconds**; these targets have not yet been benchmarked. Browser-test seed data is **synthetic**. No real credentials or personal data belong in the repository.
+Stages 3–4 implement customer/catalog management, quotations, subscription lifecycle, idempotent recurring billing, discounts and invoices. The final sprint adds manual payments, overdue balances, reports and the remaining connected UI workflows. The planned scale is approximately **5,000 subscriptions and 20,000+ invoices**, with paginated lists under **2 seconds**; these targets have not yet been benchmarked. Browser-test seed data is **synthetic**. No real credentials or personal data belong in the repository.
 
-The frontend uses Next.js App Router, TypeScript, and Tailwind, integrating the exported Google Stitch designs. It supports real login, dashboard counts, subscription lists/details, draft creation, lifecycle actions, billing preview/execution, invoice lists/details and confirmation/cancellation. Payment controls remain explicitly unavailable.
+The frontend uses Next.js App Router, TypeScript, and Tailwind, integrating the exported Google Stitch designs. It supports real authentication, configuration, subscriptions, quotations, billing, invoices, payments, reporting and the customer portal. See the final sprint coverage and demo script above.
 
-See [requirements](docs/REQUIREMENTS.md), [financial decisions](docs/DECISIONS.md), and the [API contract](docs/API_CONTRACT.md). Stage 4 defines anchored periods, deferred paused charges, inclusive expiry with full final periods, auto-closure after billing, integer discount allocation, line-level exclusive tax, zero-write previews and atomic idempotent execution. Payment and reporting rules remain future work.
+See [requirements](docs/REQUIREMENTS.md), [financial decisions](docs/DECISIONS.md), and the [API contract](docs/API_CONTRACT.md). These define anchored periods, deferred paused charges, full final periods, closure, integer discount/tax calculations, zero-write previews, atomic idempotent billing/payments and actual financial reports.
 
 ## Stage 3 commercial workflow
 
@@ -260,7 +278,7 @@ Open http://localhost:3000 and log in as an existing synthetic admin/staff. Crea
 {"name":"Synthetic launch offer","discount_type":"percentage","scope":"subscription","rate_basis_points":1000,"minimum_purchase_paise":0,"minimum_quantity":1,"valid_from":"2026-01-01","valid_to":"2026-12-31","usage_limit":10,"active":true}
 ```
 
-Open **Billing Center**, set an `as_of` on/after the subscription start, select **Preview dry run**, inspect periods/tax/discount totals, then **Execute billing → Confirm execution**. Open a generated invoice link (or **Invoices**) and select **Confirm invoice → Confirm now**. Re-preview/re-run the same date: no duplicate invoice or redemption is created. Customers see only their own invoices. Cancel preserves the period and discount usage; payment recording/PDF/email remain disabled.
+Open **Billing Center**, set an `as_of` on/after the subscription start, select **Preview dry run**, inspect periods/tax/discount totals, then **Execute billing → Confirm execution**. Open a generated invoice link (or **Invoices**) and select **Confirm invoice → Confirm now**. Re-preview/re-run the same date: no duplicate invoice or redemption is created. Customers see only their own invoices. Cancel preserves the period and discount usage. The final sprint adds manual payments, Send and Print; follow `docs/DEMO_SCRIPT.md` for the complete demonstration.
 
 For an entirely isolated synthetic demonstration and verification (never uses the ordinary database):
 

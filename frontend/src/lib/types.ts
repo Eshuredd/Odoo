@@ -175,6 +175,11 @@ export interface InvoiceAmounts {
   lines: InvoiceLine[];
 }
 export interface Invoice extends InvoiceAmounts {
+  paid_amount_paise: bigint;
+  remaining_balance_paise: bigint;
+  payment_progress: "unpaid" | "partial" | "paid";
+  is_overdue: boolean | null;
+  days_overdue: number | null;
   id: number;
   number: string;
   subscription_id: number;
@@ -186,6 +191,42 @@ export interface Invoice extends InvoiceAmounts {
   status: InvoiceStatus;
   created_at: string;
   updated_at: string;
+}
+export type PaymentMethod = "cash" | "bank_transfer" | "upi" | "card" | "other";
+export interface PaymentInput {
+  amount_paise: bigint;
+  method: PaymentMethod;
+  payment_date: string;
+  reference: string | null;
+  note: string | null;
+  idempotency_key: string;
+}
+export interface Payment {
+  id: number;
+  invoice_id: number;
+  amount_paise: bigint;
+  method: PaymentMethod;
+  payment_date: string;
+  reference: string | null;
+  note: string | null;
+  created_at: string;
+}
+export interface ReportSummary {
+  as_of: string;
+  from_date: string;
+  to_date: string;
+  active_subscription_count: number;
+  paused_subscription_count: number;
+  revenue_collected_paise: bigint;
+  outstanding_balance_paise: bigint;
+  overdue_invoice_count: number;
+  overdue_amount_paise: bigint;
+  aging_buckets: Record<
+    string,
+    { invoice_count: number; amount_paise: bigint }
+  >;
+  invoice_count_by_status: Record<InvoiceStatus, number>;
+  monthly_collections: { month: string; amount_paise: bigint }[];
 }
 export interface BillingInvoice extends InvoiceAmounts {
   subscription_id: number;

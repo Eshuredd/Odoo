@@ -14,7 +14,7 @@ import {
   Table,
 } from "@/components/ui";
 import { InvoiceBadge, Period, useInvoices } from "@/components/invoice-data";
-import { formatDate, formatINR } from "@/lib/format";
+import { formatDate, formatINR, todayInIndia } from "@/lib/format";
 import { isOperator } from "@/lib/lifecycle";
 
 export default function InvoicesPage() {
@@ -25,6 +25,8 @@ export default function InvoicesPage() {
   );
 }
 function InvoiceRegister() {
+  const [asOf, setAsOf] = useState(todayInIndia);
+  const [overdue, setOverdue] = useState("");
   const { user } = useAuth();
   const operator = !!user && isOperator(user.role);
   const [filters, setFilters] = useState({
@@ -39,8 +41,8 @@ function InvoiceRegister() {
   const [offset, setOffset] = useState(0),
     [limit, setLimit] = useState(20);
   const query = useMemo(
-    () => ({ ...applied, limit, offset }),
-    [applied, limit, offset],
+    () => ({ ...applied, limit, offset, as_of: asOf, overdue }),
+    [applied, limit, offset, asOf, overdue],
   );
   const records = useInvoices(query);
   const data = records.data;
@@ -67,6 +69,34 @@ function InvoiceRegister() {
         subtitle="Filters and pagination apply on the server"
       >
         <form onSubmit={filter} className="panel-body form-grid">
+          <label className="field">
+            Aging as of
+            <input
+              type="date"
+              required
+              value={asOf}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setAsOf(e.target.value);
+                  setOffset(0);
+                }
+              }}
+            />
+          </label>
+          <label className="field">
+            Overdue filter
+            <select
+              value={overdue}
+              onChange={(e) => {
+                setOverdue(e.target.value);
+                setOffset(0);
+              }}
+            >
+              <option value="">All invoices</option>
+              <option value="true">Overdue only</option>
+              <option value="false">Not overdue</option>
+            </select>
+          </label>
           <label className="field">
             Invoice number
             <input
@@ -187,6 +217,8 @@ function InvoiceRegister() {
                 { name: "Due date" },
                 { name: "Status" },
                 { name: "Total", numeric: true },
+                { name: "Balance", numeric: true },
+                { name: "Payment progress" },
               ]}
             >
               {data.page.items.map((row) => (
@@ -221,6 +253,17 @@ function InvoiceRegister() {
                   <td className="numeric money">
                     {formatINR(row.total_paise)}
                   </td>
+                  <td className="numeric money">
+                    {formatINR(row.remaining_balance_paise)}
+                  </td>
+                  <td>
+                    {row.payment_progress}
+                    <small>
+                      {row.is_overdue
+                        ? `${row.days_overdue} days overdue`
+                        : "Not overdue"}
+                    </small>
+                  </td>
                 </tr>
               ))}
             </Table>
@@ -243,9 +286,8 @@ function InvoiceRegister() {
         </Panel>
       )}
       <Notice kind="info">
-        Payments and balances are not available until payment recording is
-        implemented. Cancelled invoices remain in the register and reserve their
-        billing periods.
+        Balances reflect manually recorded payments. Cancelled invoices remain
+        in the register and reserve their billing periods.
       </Notice>
     </div>
   );

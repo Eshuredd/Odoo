@@ -21,7 +21,7 @@ Summary returns dates, active_subscription_count (including paused), paused_subs
 
 Send writes an invoice notice and audit in the same offline transaction, or requests configured SMTP delivery. SMTP acceptance is not guaranteed delivery and cannot be rolled back after external acceptance. No PDF-generation endpoint exists; frontend Print uses browser print CSS. The final sprint rules supersede earlier Stage 4 statements reserving payment/report features.
 
-Base path: `/api/v1`. Stages 1–4 implement health, authentication, staff creation, development outbox, customer profiles, catalog/plans, quotation templates, subscription lifecycle, recurring billing, discounts, and invoices. Payments and reports remain planned. Swagger UI is at `/docs`; `/openapi.json` is the authoritative machine-readable schema for all exact request/response types/defaults/bounds. Documentation assets are served locally.
+Base path: `/api/v1`. The implemented core covers health, authentication, staff creation, development outbox, customer profiles, catalog/plans, quotation templates, subscription lifecycle, recurring billing, discounts, invoices, manual payments and financial reports. Swagger UI is at `/docs`; `/openapi.json` is the authoritative machine-readable schema for exact request/response types/defaults/bounds. Documentation assets are served locally.
 
 ## Implemented health endpoint
 

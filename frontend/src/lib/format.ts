@@ -2,6 +2,19 @@ const indianInteger = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
+export function parseINR(value: string): bigint {
+  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value.trim());
+  if (!match)
+    throw new Error(
+      "Enter an INR amount with at most two decimal places, without commas.",
+    );
+  const amount =
+    BigInt(match[1]) * 100n + BigInt((match[2] || "").padEnd(2, "0"));
+  if (amount > 9223372036854775807n)
+    throw new Error("Amount exceeds the supported range.");
+  return amount;
+}
+
 export function formatINR(paise: bigint): string {
   const amount = paise < 0n ? -paise : paise;
   return `${paise < 0n ? "−" : ""}₹${indianInteger.format(amount / 100n)}.${(amount % 100n).toString().padStart(2, "0")}`;

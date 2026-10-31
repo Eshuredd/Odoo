@@ -1,4 +1,4 @@
-import { isLosslessNumber, parse } from "lossless-json";
+import { isLosslessNumber, parse, stringify } from "lossless-json";
 import type {
   ActionBody,
   Customer,
@@ -14,6 +14,9 @@ import type {
   Variant,
   BillingReport,
   Invoice,
+  Payment,
+  PaymentInput,
+  ReportSummary,
 } from "./types";
 
 export class ApiError extends Error {
@@ -95,8 +98,7 @@ export class ApiClient {
       response = await fetch(`${this.baseURL.replace(/\/$/, "")}${path}`, {
         method: options.method ?? "GET",
         headers,
-        body:
-          options.body === undefined ? undefined : JSON.stringify(options.body),
+        body: options.body === undefined ? undefined : stringify(options.body),
         signal: options.signal,
         cache: "no-store",
         credentials: "omit",
@@ -146,12 +148,42 @@ export class ApiClient {
       signal,
     });
   }
-  invoice(id: number, signal?: AbortSignal) {
-    return this.request<Invoice>(`/invoices/${id}`, { signal });
+  invoice(id: number, signal?: AbortSignal, asOf?: string) {
+    return this.request<Invoice>(
+      `/invoices/${id}${asOf ? this.query({ as_of: asOf }) : ""}`,
+      { signal },
+    );
   }
   invoiceAction(id: number, action: "confirm" | "cancel") {
     return this.request<Invoice>(`/invoices/${id}/${action}`, {
       method: "POST",
+    });
+  }
+  recordPayment(id: number, body: PaymentInput) {
+    return this.request<Payment>(`/invoices/${id}/payments`, {
+      method: "POST",
+      body,
+    });
+  }
+  settleZero(id: number) {
+    return this.request<Invoice>(`/invoices/${id}/settle-zero`, {
+      method: "POST",
+    });
+  }
+  payments(query: Query = {}, signal?: AbortSignal) {
+    return this.request<Page<Payment>>(`/payments${this.query(query)}`, {
+      signal,
+    });
+  }
+  invoicePayments(id: number, query: Query = {}, signal?: AbortSignal) {
+    return this.request<Page<Payment>>(
+      `/invoices/${id}/payments${this.query(query)}`,
+      { signal },
+    );
+  }
+  summary(query: Query, signal?: AbortSignal) {
+    return this.request<ReportSummary>(`/reports/summary${this.query(query)}`, {
+      signal,
     });
   }
   login(email: string, password: string) {

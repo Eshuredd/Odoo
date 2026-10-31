@@ -31,9 +31,11 @@ def test_initial_migration_and_metadata_match(database_url: str) -> None:
     command.upgrade(config, "head")
     engine = create_db_engine(database_url)
     try:
-        assert set(inspect(engine).get_table_names()) == {"users", "audit_logs", "alembic_version"}
+        assert set(inspect(engine).get_table_names()) == {
+            "users", "audit_logs", "alembic_version", "password_reset_tokens", "email_outbox",
+        }
         with engine.connect() as connection:
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0001_foundation"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0002_authentication"
         command.check(config)
         command.upgrade(config, "head")  # Repeated upgrade must be harmless.
         command.downgrade(config, "base")
